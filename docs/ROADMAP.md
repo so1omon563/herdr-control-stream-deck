@@ -2,7 +2,9 @@
 
 ## Release blockers
 
-- Create and onboard the GitHub repository after local readiness.
+No unresolved local-development blockers are currently tracked. Herdr Control
+remains pre-release; Marketplace preparation and a repeatable release process
+are still required before public distribution.
 
 ## Later
 
