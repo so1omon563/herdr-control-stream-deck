@@ -5,6 +5,11 @@
   "description": "Herdr workspace, tab, pane, and agent controls for Elgato Stream Deck hardware.",
   "scripts": {
     "build:profiles": "zsh scripts/build-profiles.zsh",
+    "validate:streamdeck": "streamdeck validate plugin/com.so1omon563.herdr-control.sdPlugin --no-update-check",
+    "pack:streamdeck": "streamdeck pack plugin/com.so1omon563.herdr-control.sdPlugin --output dist --force --no-update-check --no-file-list",
     "test": "node validate.mjs"
+  },
+  "devDependencies": {
+    "@elgato/cli": "1.9.0"
   }
 }

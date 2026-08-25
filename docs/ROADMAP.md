@@ -3,7 +3,6 @@
 ## Release blockers
 
 - Verify the new personal plugin UUID and bundled profiles with a clean install.
-- Replace development packaging with the official Stream Deck CLI validation and packaging flow.
 - Decide and add the repository license.
 - Document tested Herdr, Stream Deck, macOS, terminal, and hardware versions.
 - Test upgrades, uninstall behavior, first-run permissions, and missing-Herdr errors.

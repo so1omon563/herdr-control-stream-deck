@@ -2,7 +2,9 @@
   "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
   "Actions": [
     {
-      "Controllers": ["Keypad"],
+      "Controllers": [
+        "Keypad"
+      ],
       "DisableAutomaticStates": true,
       "Icon": "images/idle",
       "Name": "Herdr Control",
@@ -20,7 +22,9 @@
       "UUID": "com.so1omon563.herdr-control.toggle"
     },
     {
-      "Controllers": ["Keypad"],
+      "Controllers": [
+        "Keypad"
+      ],
       "Icon": "images/command",
       "Name": "Herdr Command",
       "States": [
@@ -33,7 +37,9 @@
       "VisibleInActionsList": false
     },
     {
-      "Controllers": ["Keypad"],
+      "Controllers": [
+        "Keypad"
+      ],
       "Icon": "images/back",
       "Name": "Return to Previous Profile",
       "States": [
@@ -46,7 +52,9 @@
       "VisibleInActionsList": false
     },
     {
-      "Controllers": ["Encoder"],
+      "Controllers": [
+        "Encoder"
+      ],
       "Encoder": {
         "Icon": "images/command",
         "layout": "layouts/herdr-dial.json",
@@ -68,9 +76,11 @@
     }
   ],
   "Author": "so1omon563",
+  "Category": "Herdr Control",
+  "CategoryIcon": "images/idle",
   "CodePath": "plugin",
   "Description": "Open or return to Herdr in Ghostty, kitty, iTerm2, or Terminal.app and automatically show the bundled Stream Deck or Stream Deck+ controls while it is focused.",
-  "Icon": "images/idle",
+  "Icon": "images/plugin",
   "Name": "Herdr Control",
   "OS": [
     {

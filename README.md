@@ -41,8 +41,13 @@ Workspace and tab creation and cycling, pane navigation and layout controls, age
 Run the validation suite with:
 
 ```sh
+npm ci
 npm test
+npm run validate:streamdeck
 ```
+
+Create a local `.streamDeckPlugin` installer with `npm run pack:streamdeck`.
+This packages the plugin but does not install or publish it.
 
 See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the repository layout and [docs/ROADMAP.md](docs/ROADMAP.md) for the release blockers.
 

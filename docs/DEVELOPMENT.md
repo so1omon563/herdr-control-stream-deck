@@ -9,11 +9,23 @@
 
 ## Validate
 
+Install the pinned development tooling with Node.js 20.1 or later:
+
 ```sh
-npm test
+npm ci
 ```
 
-The validation checks manifests, profile layouts, icons, dial behavior, command mappings, and the pane-routing regressions found during hardware testing.
+The repository pins Elgato's official Stream Deck CLI at version 1.9.0.
+
+```sh
+npm test
+npm run validate:streamdeck
+```
+
+The repository validation checks manifests, profile layouts, icons, dial
+behavior, command mappings, and the pane-routing regressions found during
+hardware testing. The Stream Deck validation runs the official CLI against the
+personal plugin UUID without updating its validation schemas during the run.
 
 ## Profiles
 
@@ -27,4 +39,13 @@ Do not hand-edit the `.streamDeckProfile` archives.
 
 ## Packaging
 
-Public packages should be validated and built with Elgato's Stream Deck CLI. That release workflow will be added after the plugin identity, configuration handling, and supported-device matrix are stable.
+Create a local installer with:
+
+```sh
+npm run pack:streamdeck
+```
+
+The command validates the plugin and writes
+`dist/com.so1omon563.herdr-control.streamDeckPlugin`, replacing an existing
+local artifact. The plugin's `.sdignore` excludes Finder metadata. Packaging
+does not install, publish, or submit the plugin.
