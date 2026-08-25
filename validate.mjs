@@ -104,7 +104,7 @@ for (const terminal of ["auto", "ghostty", "kitty", "iterm", "terminal"]) {
   assert.ok(inspector.includes(`value="${terminal}"`), `missing terminal option ${terminal}`);
 }
 
-const { agentCommandArgs, encoderCommand, encoderFeedback, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalIds } = require(join(plugin, "plugin.js"));
+const { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalIds } = require(join(plugin, "plugin.js"));
 assert.equal(normalizeTerminal("kitty"), "kitty");
 assert.equal(normalizeTerminal("unknown"), "auto");
 assert.deepEqual(terminalIds("iterm"), ["iterm"]);
@@ -127,6 +127,28 @@ assert.deepEqual(prefixCommand("close-workspace"), [2, true]);
 assert.deepEqual(prefixCommand("close-tab"), [7, true]);
 assert.deepEqual(prefixCommand("close-pane"), [7, false]);
 assert.equal(prefixCommand("rename"), null);
+const affectedBindings = {
+  "workspace-picker": "workspace_picker",
+  "sidebar": "toggle_sidebar",
+  "rename-workspace": "rename_workspace",
+  "rename-tab": "rename_tab",
+  "rename-pane": "rename_pane",
+  "close-workspace": "close_workspace",
+  "close-tab": "close_tab",
+  "close-pane": "close_pane"
+};
+for (const [command, binding] of Object.entries(affectedBindings)) {
+  assert.equal(bindingOverride(command, `[keys]\n${binding} = "prefix+f12"`), binding);
+}
+assert.equal(bindingOverride("workspace-picker", "[keys]\nprefix = \"ctrl+a\""), "prefix");
+assert.equal(bindingOverride("workspace-picker", "keys.workspace_picker = \"ctrl+alt+w\""), "workspace_picker");
+assert.equal(bindingOverride("workspace-picker", "[\"keys\"]\n\"workspace_picker\" = \"ctrl+alt+w\""), "workspace_picker");
+assert.equal(bindingOverride("workspace-picker", "\"keys\".\"workspace_picker\" = \"ctrl+alt+w\""), "workspace_picker");
+assert.equal(bindingOverride("workspace-picker", "keys = { workspace_picker = \"ctrl+alt+w\" }"), "keys");
+assert.equal(bindingOverride("workspace-picker", "[keys]\nnew_tab = \"ctrl+alt+c\""), null);
+assert.equal(bindingOverride("workspace-picker", "[keys]\n# workspace_picker = \"ctrl+alt+w\""), null);
+assert.equal(bindingOverride("workspace-next", "[keys]\nprefix = \"ctrl+a\""), null);
+assert.ok(source.includes('setTitle(context, "CUSTOM\\nKEYS")'));
 const paneState = {
   focused_pane_id: "p2",
   focused_tab_id: "t1",

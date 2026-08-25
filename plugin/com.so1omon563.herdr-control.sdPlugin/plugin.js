@@ -1,5 +1,5 @@
 const { execFile } = require("node:child_process");
-const { existsSync } = require("node:fs");
+const { existsSync, readFileSync } = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 
@@ -125,8 +125,83 @@ const HERDR_PREFIX_COMMANDS = {
   "close-pane": [7, false]
 };
 
+const HERDR_CONFIG_BINDINGS = {
+  "workspace-picker": "workspace_picker",
+  "sidebar": "toggle_sidebar",
+  "rename-workspace": "rename_workspace",
+  "rename-tab": "rename_tab",
+  "rename-pane": "rename_pane",
+  "close-workspace": "close_workspace",
+  "close-tab": "close_tab",
+  "close-pane": "close_pane"
+};
 function prefixCommand(command) {
   return HERDR_PREFIX_COMMANDS[command] ?? null;
+}
+
+function herdrConfigPath() {
+  return process.env.HERDR_CONFIG_PATH?.trim()
+    || path.join(os.homedir(), ".config", "herdr", "config.toml");
+}
+
+function tomlAssignment(line) {
+  return line.match(/^([A-Za-z0-9_-]+)\s*=/)?.[1]
+    ?? line.match(/^["']([^"']+)["']\s*=/)?.[1]
+    ?? null;
+}
+
+function tomlName(value) {
+  return value.match(/^["']([^"']+)["']$/)?.[1] ?? value;
+}
+
+function bindingOverride(command, source) {
+  const binding = HERDR_CONFIG_BINDINGS[command];
+  if (!binding) return null;
+  let section = "";
+
+  for (const line of source.split(/\r?\n/)) {
+    const value = line.trim();
+    if (!value || value.startsWith("#")) continue;
+
+    const arrayTable = value.match(/^\[\[\s*([^\]]+?)\s*\]\](?:\s*#.*)?$/);
+    if (arrayTable) {
+      section = tomlName(arrayTable[1]);
+      continue;
+    }
+    const table = value.match(/^\[\s*([^\]]+?)\s*\](?:\s*#.*)?$/);
+    if (table) {
+      section = tomlName(table[1]);
+      continue;
+    }
+
+    if (!section) {
+      if (/^(?:keys|["']keys["'])\s*=/.test(value)) {
+        return "keys";
+      }
+      const dotted = value.match(/^(?:keys|["']keys["'])\.(?:([A-Za-z0-9_-]+)|["']([^"']+)["'])\s*=/);
+      const name = dotted?.[1] ?? dotted?.[2];
+      if (name === "prefix" || name === binding) return name;
+      continue;
+    }
+
+    if (section === "keys") {
+      const name = tomlAssignment(value);
+      if (name === "prefix" || name === binding) return name;
+    }
+  }
+
+  return null;
+}
+
+function activeBindingOverride(command) {
+  if (!HERDR_CONFIG_BINDINGS[command]) return null;
+  const config = herdrConfigPath();
+  if (!existsSync(config)) return null;
+  try {
+    return bindingOverride(command, readFileSync(config, "utf8"));
+  } catch {
+    return "config";
+  }
 }
 
 function argument(name) {
@@ -555,6 +630,12 @@ async function cyclePane(command, state) {
 }
 
 async function executeCommand(command) {
+  const overriddenBinding = activeBindingOverride(command);
+  if (overriddenBinding) {
+    const error = new Error(`HERDR keybinding ${overriddenBinding} is explicitly configured`);
+    error.code = "HERDR_CUSTOM_KEYBINDING";
+    throw error;
+  }
   if (command === "workspace-picker") return sendPrefixKey(13);
   if (command === "sidebar") return sendPrefixKey(11);
   const prefix = prefixCommand(command);
@@ -803,7 +884,11 @@ async function runCommand(context, command, acknowledge = true) {
     const result = await executeCommand(command);
     if (acknowledge && result !== false) showOk(context);
     await refreshEncoderFeedbacks();
-  } catch {
+  } catch (error) {
+    if (error?.code === "HERDR_CUSTOM_KEYBINDING") {
+      setTitle(context, "CUSTOM\nKEYS");
+      setTimeout(() => setTitle(context, COMMAND_TITLES[command] ?? "HERDR"), 2000);
+    }
     showAlert(context);
   }
 }
@@ -928,5 +1013,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, encoderCommand, encoderFeedback, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalIds };
+module.exports = { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalIds };
 if (require.main === module) connectPlugin();

@@ -23,10 +23,18 @@ Herdr Control brings workspace, tab, pane, and agent navigation from [Herdr](htt
 
 ## Known limitations
 
-- Spaces, Sidebar, Rename, and Close currently assume Herdr's default keybindings. Custom Herdr keybindings can break those actions.
+- Spaces, Sidebar, Rename, and Close currently support only Herdr's default keybindings. Herdr Control blocks an affected action when it detects a relevant override instead of sending the wrong default sequence.
 - The current build and installation process is for development only.
 - Other Stream Deck models have not been tested yet.
 - Accessibility and Automation permissions may be required to focus terminal applications and send Herdr key commands.
+
+### Custom Herdr keybindings
+
+Herdr Control reads `HERDR_CONFIG_PATH` or `~/.config/herdr/config.toml` only to detect explicit overrides. It does not parse or execute configured bindings yet. If `keys.prefix` or the affected action field is assigned explicitly, the corresponding Stream Deck action displays `CUSTOM KEYS` and stops.
+
+The affected fields are `keys.workspace_picker`, `keys.toggle_sidebar`, `keys.rename_workspace`, `keys.rename_tab`, `keys.rename_pane`, `keys.close_workspace`, `keys.close_tab`, and `keys.close_pane`. An explicit `keys.prefix` assignment affects all eight. Even an explicit assignment containing the default value is treated as an override until automatic binding support is implemented.
+
+Workspace and tab creation and cycling, pane navigation and layout controls, agent focus, Detach, and Back continue to use Herdr CLI or plugin-owned behavior. Native built-in action invocation is being discussed upstream in [herdr#1624](https://github.com/herdrdev/herdr/discussions/1624).
 
 ## Development
 
