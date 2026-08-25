@@ -758,6 +758,17 @@ function showOk(context) {
   send({ event: "showOk", context });
 }
 
+function permissionFeedback(error) {
+  const message = `${error?.message ?? ""}\n${error?.stderr ?? ""}`;
+  if (/-1719\b|\b1002\b|assistive access|not allowed to send keystrokes/i.test(message)) {
+    return { title: "ALLOW\nACCESS", pane: "Privacy_Accessibility" };
+  }
+  if (/-1743\b|not authorized to send Apple events/i.test(message)) {
+    return { title: "ALLOW\nAUTOMATION", pane: "Privacy_Automation" };
+  }
+  return null;
+}
+
 function switchProfile(device, profile) {
   send({
     event: "switchToProfile",
@@ -888,6 +899,13 @@ async function runCommand(context, command, acknowledge = true) {
     if (error?.code === "HERDR_CUSTOM_KEYBINDING") {
       setTitle(context, "CUSTOM\nKEYS");
       setTimeout(() => setTitle(context, COMMAND_TITLES[command] ?? "HERDR"), 2000);
+    } else {
+      const feedback = permissionFeedback(error);
+      if (feedback) {
+        setTitle(context, feedback.title);
+        setTimeout(() => setTitle(context, COMMAND_TITLES[command] ?? "HERDR"), 3000);
+        run("/usr/bin/open", [`x-apple.systempreferences:com.apple.preference.security?${feedback.pane}`], 5000).catch(() => {});
+      }
     }
     showAlert(context);
   }
@@ -1013,5 +1031,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds };
+module.exports = { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, permissionFeedback, prefixCommand, selectAgent, terminalForLaunch, terminalIds };
 if (require.main === module) connectPlugin();

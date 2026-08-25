@@ -110,12 +110,15 @@ for (const terminal of ["auto", "ghostty", "kitty", "iterm", "terminal"]) {
   assert.ok(inspector.includes(`value="${terminal}"`), `missing terminal option ${terminal}`);
 }
 
-const { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
+const { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, permissionFeedback, prefixCommand, selectAgent, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
 assert.throws(() => herdrExecutable([]), /HERDR executable not found in a supported install location/);
 await assert.rejects(terminalForLaunch("kitty", () => false), /kitty is not installed/);
 await assert.rejects(terminalForLaunch("auto", () => false), /No supported terminal is installed/);
 assert.equal(normalizeTerminal("kitty"), "kitty");
 assert.equal(normalizeTerminal("unknown"), "auto");
+assert.deepEqual(permissionFeedback({ stderr: "System Events got an error: osascript is not allowed to send keystrokes. (1002)" }), { title: "ALLOW\nACCESS", pane: "Privacy_Accessibility" });
+assert.deepEqual(permissionFeedback(new Error("Not authorized to send Apple events to System Events. (-1743)")), { title: "ALLOW\nAUTOMATION", pane: "Privacy_Automation" });
+assert.equal(permissionFeedback(new Error("HERDR client is not attached")), null);
 assert.deepEqual(terminalIds("iterm"), ["iterm"]);
 assert.deepEqual(terminalIds("auto"), ["ghostty", "kitty", "iterm", "terminal"]);
 assert.equal(encoderCommand("workspace", "dialRotate", { ticks: -1 }), "workspace-prev");

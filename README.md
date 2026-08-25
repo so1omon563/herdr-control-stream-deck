@@ -31,7 +31,7 @@ Only the exact versions and hardware listed in the
 - Spaces, Sidebar, Rename, and Close currently support only Herdr's default keybindings. Herdr Control blocks an affected action when it detects a relevant override instead of sending the wrong default sequence.
 - The current build and installation process is for development only.
 - Other Stream Deck models have not been tested yet.
-- Missing Herdr, unavailable terminals, and missing macOS permissions currently produce only Stream Deck's generic error indicator.
+- Missing Herdr and unavailable terminals currently produce only Stream Deck's generic error indicator.
 
 ### Custom Herdr keybindings
 
@@ -41,14 +41,16 @@ The affected fields are `keys.workspace_picker`, `keys.toggle_sidebar`, `keys.re
 
 Workspace and tab creation and cycling, pane navigation and layout controls, agent focus, Detach, and Back continue to use Herdr CLI or plugin-owned behavior. Native built-in action invocation is being discussed upstream in [herdr#1624](https://github.com/herdrdev/herdr/discussions/1624).
 
-### macOS permissions
+### First-run macOS permissions
 
 Spaces, Sidebar, Rename, and Close send Herdr key commands through macOS System Events. Enable both of these entries for the Stream Deck app:
 
 1. **System Settings → Privacy & Security → Accessibility → Elgato Stream Deck**
 2. **System Settings → Privacy & Security → Automation → Elgato Stream Deck → System Events**
 
-Terminal.app and iTerm2 may request an additional Automation grant when Herdr Control focuses or closes their windows. macOS does not reliably open the Accessibility settings when the permission is missing. If a protected action shows an exclamation mark, check the entries above and press the action again.
+If a protected action displays `ALLOW ACCESS`, Herdr Control opens the Accessibility pane. Enable **Elgato Stream Deck**, then press the action again. If it displays `ALLOW AUTOMATION`, enable **System Events** under the Stream Deck entry in the Automation pane.
+
+Terminal.app and iTerm2 may request an additional Automation grant when Herdr Control focuses or closes their windows. Enable the affected terminal under **System Settings → Privacy & Security → Automation → Elgato Stream Deck**. If macOS retains a stale denial, quit and reopen Stream Deck after changing the permission.
 
 ### Upgrades and uninstall
 

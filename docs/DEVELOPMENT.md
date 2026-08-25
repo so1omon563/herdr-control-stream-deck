@@ -82,12 +82,10 @@ Stream Deck 7.5.0 (22885) on macOS 26.5.2:
   grants belong to the host application.
 
 A reset-permissions test restarted Stream Deck before exercising `SPACES`.
-macOS recreated the System Events Automation grant, but left Stream Deck's
-Accessibility grant disabled and did not open the relevant settings. The action
-showed only Stream Deck's generic error indicator. Enabling **Elgato Stream
-Deck** under **Privacy & Security → Accessibility** restored the action
-immediately.
+The denied action returned AppleScript error `1002`, opened **Privacy &
+Security → Accessibility**, and left **Elgato Stream Deck** disabled for the
+user to approve. Enabling the grant restored the action immediately.
 
 The validation suite directly covers the missing-Herdr, unavailable selected
-terminal, and no-supported-terminal error paths. User-visible diagnostic and
-permission onboarding improvements remain release blockers.
+terminal, no-supported-terminal, Accessibility, and Automation error paths.
+The remaining user-visible diagnostic work is tracked separately.
