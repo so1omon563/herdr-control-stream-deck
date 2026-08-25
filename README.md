@@ -18,8 +18,13 @@ Herdr Control brings workspace, tab, pane, and agent navigation from [Herdr](htt
 
 - macOS 13 or later.
 - Stream Deck 6.6 or later.
-- Herdr available from a standard installation path.
+- Herdr 0.8.2 available from a standard installation path.
+- A compatible Node.js runtime supplied by Stream Deck or installed in a
+  supported system path.
 - A 15-key Stream Deck or Stream Deck+.
+
+Only the exact versions and hardware listed in the
+[support matrix](docs/SUPPORT.md) are covered by current test evidence.
 
 ## Known limitations
 
@@ -49,7 +54,9 @@ npm run validate:streamdeck
 Create a local `.streamDeckPlugin` installer with `npm run pack:streamdeck`.
 This packages the plugin but does not install or publish it.
 
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the repository layout and [docs/ROADMAP.md](docs/ROADMAP.md) for the release blockers.
+See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the repository layout,
+[docs/SUPPORT.md](docs/SUPPORT.md) for the tested environment, and
+[docs/ROADMAP.md](docs/ROADMAP.md) for the release blockers.
 
 ## License
 
