@@ -1,0 +1,66 @@
+name: Feature Request
+description: Propose an improvement to Herdr Control.
+title: "feature: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Please review the README, support matrix, and roadmap before proposing
+        a change. Herdr Control is currently pre-release.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I searched the existing issues for related proposals.
+          required: true
+        - label: I reviewed the documented limitations and supported environment.
+          required: true
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problem
+      description: Describe the concrete workflow or limitation this proposal addresses.
+    validations:
+      required: true
+
+  - type: textarea
+    id: proposal
+    attributes:
+      label: Proposed change
+      description: Explain the desired controls and user-visible behavior.
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scope
+    attributes:
+      label: Device or workflow scope
+      multiple: true
+      options:
+        - 15-key Stream Deck
+        - Stream Deck+
+        - Other Stream Deck hardware
+        - Terminal integration
+        - Packaging or Marketplace
+        - Cross-device behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: permissions
+    attributes:
+      label: Permissions and compatibility impact
+      description: Note any expected effect on macOS permissions, Herdr versions, terminals, profiles, or existing actions.
+    validations:
+      required: false
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered
+    validations:
+      required: false
