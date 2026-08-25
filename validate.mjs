@@ -110,7 +110,10 @@ for (const terminal of ["auto", "ghostty", "kitty", "iterm", "terminal"]) {
   assert.ok(inspector.includes(`value="${terminal}"`), `missing terminal option ${terminal}`);
 }
 
-const { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalIds } = require(join(plugin, "plugin.js"));
+const { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
+assert.throws(() => herdrExecutable([]), /HERDR executable not found in a supported install location/);
+await assert.rejects(terminalForLaunch("kitty", () => false), /kitty is not installed/);
+await assert.rejects(terminalForLaunch("auto", () => false), /No supported terminal is installed/);
 assert.equal(normalizeTerminal("kitty"), "kitty");
 assert.equal(normalizeTerminal("unknown"), "auto");
 assert.deepEqual(terminalIds("iterm"), ["iterm"]);

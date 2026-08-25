@@ -66,3 +66,28 @@ archive. Stream Deck logged the import as corrupted and rejected it. The
 A hardware smoke test placed `com.so1omon563.herdr-control.toggle` on the
 existing 15-key default profile and confirmed that pressing it opens Herdr and
 returns to the previous application as expected.
+
+## Lifecycle validation
+
+The personal package was exercised through an update and uninstall cycle with
+Stream Deck 7.5.0 (22885) on macOS 26.5.2:
+
+- Installing a temporary `0.1.0.1` package over `0.1.0.0` preserved both
+  bundled profile IDs and the existing action settings.
+- Uninstalling removed the plugin directory but retained both bundled profiles
+  and the configured action in the existing default profile.
+- Reinstalling the canonical `0.1.0.0` package restored the retained action and
+  did not duplicate profiles.
+- Uninstalling did not revoke Stream Deck's macOS permissions because those
+  grants belong to the host application.
+
+A reset-permissions test restarted Stream Deck before exercising `SPACES`.
+macOS recreated the System Events Automation grant, but left Stream Deck's
+Accessibility grant disabled and did not open the relevant settings. The action
+showed only Stream Deck's generic error indicator. Enabling **Elgato Stream
+Deck** under **Privacy & Security → Accessibility** restored the action
+immediately.
+
+The validation suite directly covers the missing-Herdr, unavailable selected
+terminal, and no-supported-terminal error paths. User-visible diagnostic and
+permission onboarding improvements remain release blockers.

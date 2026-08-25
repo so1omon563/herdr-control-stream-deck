@@ -31,7 +31,7 @@ Only the exact versions and hardware listed in the
 - Spaces, Sidebar, Rename, and Close currently support only Herdr's default keybindings. Herdr Control blocks an affected action when it detects a relevant override instead of sending the wrong default sequence.
 - The current build and installation process is for development only.
 - Other Stream Deck models have not been tested yet.
-- Accessibility and Automation permissions may be required to focus terminal applications and send Herdr key commands.
+- Missing Herdr, unavailable terminals, and missing macOS permissions currently produce only Stream Deck's generic error indicator.
 
 ### Custom Herdr keybindings
 
@@ -40,6 +40,21 @@ Herdr Control reads `HERDR_CONFIG_PATH` or `~/.config/herdr/config.toml` only to
 The affected fields are `keys.workspace_picker`, `keys.toggle_sidebar`, `keys.rename_workspace`, `keys.rename_tab`, `keys.rename_pane`, `keys.close_workspace`, `keys.close_tab`, and `keys.close_pane`. An explicit `keys.prefix` assignment affects all eight. Even an explicit assignment containing the default value is treated as an override until automatic binding support is implemented.
 
 Workspace and tab creation and cycling, pane navigation and layout controls, agent focus, Detach, and Back continue to use Herdr CLI or plugin-owned behavior. Native built-in action invocation is being discussed upstream in [herdr#1624](https://github.com/herdrdev/herdr/discussions/1624).
+
+### macOS permissions
+
+Spaces, Sidebar, Rename, and Close send Herdr key commands through macOS System Events. Enable both of these entries for the Stream Deck app:
+
+1. **System Settings → Privacy & Security → Accessibility → Elgato Stream Deck**
+2. **System Settings → Privacy & Security → Automation → Elgato Stream Deck → System Events**
+
+Terminal.app and iTerm2 may request an additional Automation grant when Herdr Control focuses or closes their windows. macOS does not reliably open the Accessibility settings when the permission is missing. If a protected action shows an exclamation mark, check the entries above and press the action again.
+
+### Upgrades and uninstall
+
+Installing a newer package updates the plugin in place and preserves existing profiles and action settings. Uninstalling from Stream Deck Preferences removes the plugin bundle but leaves imported Herdr profiles and configured keys in place. Those keys remain unavailable until the plugin is reinstalled or the actions are removed manually.
+
+Accessibility and Automation grants belong to the Stream Deck app, not the Herdr Control plugin, so uninstalling the plugin does not remove them.
 
 ## Development
 

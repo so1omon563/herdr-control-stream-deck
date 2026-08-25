@@ -12,6 +12,12 @@ const HERDR_PROFILES = {
   7: "profiles/HERDR Plus"
 };
 const TERMINAL_ORDER = ["ghostty", "kitty", "iterm", "terminal"];
+const HERDR_CANDIDATES = [
+  "/opt/homebrew/bin/herdr",
+  "/usr/local/bin/herdr",
+  path.join(os.homedir(), ".local", "bin", "herdr"),
+  path.join(os.homedir(), ".cargo", "bin", "herdr")
+];
 const TERMINAL_APPS = {
   ghostty: ["/Applications/Ghostty.app", path.join(os.homedir(), "Applications", "Ghostty.app")],
   kitty: ["/Applications/kitty.app", path.join(os.homedir(), "Applications", "kitty.app")],
@@ -30,13 +36,7 @@ const PROCESS_NAMES = {
   terminal: "Terminal"
 };
 
-function herdrExecutable() {
-  const candidates = [
-    "/opt/homebrew/bin/herdr",
-    "/usr/local/bin/herdr",
-    path.join(os.homedir(), ".local", "bin", "herdr"),
-    path.join(os.homedir(), ".cargo", "bin", "herdr")
-  ];
+function herdrExecutable(candidates = HERDR_CANDIDATES) {
   const executable = candidates.find(existsSync);
   if (!executable) throw new Error("HERDR executable not found in a supported install location");
   return executable;
@@ -494,14 +494,14 @@ async function detach(client) {
   await closeScriptedClient(client);
 }
 
-async function terminalForLaunch() {
-  if (terminalPreference !== "auto") {
-    if (!terminalIsInstalled(terminalPreference)) {
-      throw new Error(`${terminalPreference} is not installed`);
+async function terminalForLaunch(preference = terminalPreference, isInstalled = terminalIsInstalled) {
+  if (preference !== "auto") {
+    if (!isInstalled(preference)) {
+      throw new Error(`${preference} is not installed`);
     }
-    return terminalPreference;
+    return preference;
   }
-  const terminal = TERMINAL_ORDER.find(terminalIsInstalled);
+  const terminal = TERMINAL_ORDER.find(isInstalled);
   if (!terminal) throw new Error("No supported terminal is installed");
   return terminal;
 }
@@ -1013,5 +1013,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalIds };
+module.exports = { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds };
 if (require.main === module) connectPlugin();

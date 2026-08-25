@@ -2,7 +2,8 @@
 
 ## Release blockers
 
-- Test upgrades, uninstall behavior, first-run permissions, and missing-Herdr errors.
+- Add first-run Accessibility onboarding and recovery guidance.
+- Show actionable errors when Herdr or the selected terminal is unavailable.
 
 ## Later
 
