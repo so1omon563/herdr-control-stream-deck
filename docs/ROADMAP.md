@@ -2,7 +2,7 @@
 
 ## Release blockers
 
-- Show actionable errors when Herdr or the selected terminal is unavailable.
+- Create and onboard the GitHub repository after local readiness.
 
 ## Later
 

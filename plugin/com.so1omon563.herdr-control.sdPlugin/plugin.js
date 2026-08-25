@@ -735,7 +735,7 @@ function setState(context, state) {
 }
 
 function setTitle(context, title) {
-  send({ event: "setTitle", context, payload: { title } });
+  send({ event: "setTitle", context, payload: title === undefined ? {} : { title } });
 }
 
 function setImage(context, image) {
@@ -758,8 +758,19 @@ function showOk(context) {
   send({ event: "showOk", context });
 }
 
-function permissionFeedback(error) {
+function errorFeedback(error) {
   const message = `${error?.message ?? ""}\n${error?.stderr ?? ""}`;
+  if (error?.code === "HERDR_CUSTOM_KEYBINDING") return { title: "CUSTOM\nKEYS" };
+  if (/HERDR executable not found in a supported install location/i.test(message)) {
+    return { title: "INSTALL\nHERDR" };
+  }
+  if (/No supported terminal is installed/i.test(message)) {
+    return { title: "NO\nTERMINAL" };
+  }
+  const terminal = message.match(/\b(ghostty|kitty|iterm|terminal) is not installed\b/i)?.[1]?.toLowerCase();
+  if (terminal) {
+    return { title: `INSTALL\n${terminal === "iterm" ? "ITERM2" : terminal.toUpperCase()}` };
+  }
   if (/-1719\b|\b1002\b|assistive access|not allowed to send keystrokes/i.test(message)) {
     return { title: "ALLOW\nACCESS", pane: "Privacy_Accessibility" };
   }
@@ -767,6 +778,19 @@ function permissionFeedback(error) {
     return { title: "ALLOW\nAUTOMATION", pane: "Privacy_Automation" };
   }
   return null;
+}
+
+function showError(context, error, originalTitle) {
+  send({ event: "logMessage", payload: { message: [error?.stack ?? String(error), error?.stderr].filter(Boolean).join("\n") } });
+  const feedback = errorFeedback(error);
+  if (feedback) {
+    setTitle(context, feedback.title);
+    setTimeout(() => setTitle(context, originalTitle), 3000);
+    if (feedback.pane) {
+      run("/usr/bin/open", [`x-apple.systempreferences:com.apple.preference.security?${feedback.pane}`], 5000).catch(() => {});
+    }
+  }
+  showAlert(context);
 }
 
 function switchProfile(device, profile) {
@@ -881,9 +905,9 @@ async function toggle(context) {
     } else {
       await attach();
     }
-    setTimeout(() => refresh(true).catch(() => showAlert(context)), 750);
-  } catch {
-    showAlert(context);
+    setTimeout(() => refresh(true).catch(error => showError(context, error)), 750);
+  } catch (error) {
+    showError(context, error);
   } finally {
     busy = false;
   }
@@ -896,18 +920,7 @@ async function runCommand(context, command, acknowledge = true) {
     if (acknowledge && result !== false) showOk(context);
     await refreshEncoderFeedbacks();
   } catch (error) {
-    if (error?.code === "HERDR_CUSTOM_KEYBINDING") {
-      setTitle(context, "CUSTOM\nKEYS");
-      setTimeout(() => setTitle(context, COMMAND_TITLES[command] ?? "HERDR"), 2000);
-    } else {
-      const feedback = permissionFeedback(error);
-      if (feedback) {
-        setTitle(context, feedback.title);
-        setTimeout(() => setTitle(context, COMMAND_TITLES[command] ?? "HERDR"), 3000);
-        run("/usr/bin/open", [`x-apple.systempreferences:com.apple.preference.security?${feedback.pane}`], 5000).catch(() => {});
-      }
-    }
-    showAlert(context);
+    showError(context, error, COMMAND_TITLES[command] ?? "HERDR");
   }
 }
 
@@ -1031,5 +1044,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, permissionFeedback, prefixCommand, selectAgent, terminalForLaunch, terminalIds };
+module.exports = { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, errorFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds };
 if (require.main === module) connectPlugin();

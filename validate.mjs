@@ -110,15 +110,19 @@ for (const terminal of ["auto", "ghostty", "kitty", "iterm", "terminal"]) {
   assert.ok(inspector.includes(`value="${terminal}"`), `missing terminal option ${terminal}`);
 }
 
-const { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, permissionFeedback, prefixCommand, selectAgent, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
+const { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, errorFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
 assert.throws(() => herdrExecutable([]), /HERDR executable not found in a supported install location/);
 await assert.rejects(terminalForLaunch("kitty", () => false), /kitty is not installed/);
 await assert.rejects(terminalForLaunch("auto", () => false), /No supported terminal is installed/);
 assert.equal(normalizeTerminal("kitty"), "kitty");
 assert.equal(normalizeTerminal("unknown"), "auto");
-assert.deepEqual(permissionFeedback({ stderr: "System Events got an error: osascript is not allowed to send keystrokes. (1002)" }), { title: "ALLOW\nACCESS", pane: "Privacy_Accessibility" });
-assert.deepEqual(permissionFeedback(new Error("Not authorized to send Apple events to System Events. (-1743)")), { title: "ALLOW\nAUTOMATION", pane: "Privacy_Automation" });
-assert.equal(permissionFeedback(new Error("HERDR client is not attached")), null);
+assert.deepEqual(errorFeedback(new Error("HERDR executable not found in a supported install location")), { title: "INSTALL\nHERDR" });
+assert.deepEqual(errorFeedback(new Error("kitty is not installed")), { title: "INSTALL\nKITTY" });
+assert.deepEqual(errorFeedback(new Error("No supported terminal is installed")), { title: "NO\nTERMINAL" });
+assert.deepEqual(errorFeedback({ stderr: "System Events got an error: osascript is not allowed to send keystrokes. (1002)" }), { title: "ALLOW\nACCESS", pane: "Privacy_Accessibility" });
+assert.deepEqual(errorFeedback(new Error("Not authorized to send Apple events to System Events. (-1743)")), { title: "ALLOW\nAUTOMATION", pane: "Privacy_Automation" });
+assert.equal(errorFeedback(new Error("HERDR client is not attached")), null);
+assert.ok(source.includes('event: "logMessage"'));
 assert.deepEqual(terminalIds("iterm"), ["iterm"]);
 assert.deepEqual(terminalIds("auto"), ["ghostty", "kitty", "iterm", "terminal"]);
 assert.equal(encoderCommand("workspace", "dialRotate", { ticks: -1 }), "workspace-prev");
@@ -160,7 +164,7 @@ assert.equal(bindingOverride("workspace-picker", "keys = { workspace_picker = \"
 assert.equal(bindingOverride("workspace-picker", "[keys]\nnew_tab = \"ctrl+alt+c\""), null);
 assert.equal(bindingOverride("workspace-picker", "[keys]\n# workspace_picker = \"ctrl+alt+w\""), null);
 assert.equal(bindingOverride("workspace-next", "[keys]\nprefix = \"ctrl+a\""), null);
-assert.ok(source.includes('setTitle(context, "CUSTOM\\nKEYS")'));
+assert.deepEqual(errorFeedback({ code: "HERDR_CUSTOM_KEYBINDING" }), { title: "CUSTOM\nKEYS" });
 const paneState = {
   focused_pane_id: "p2",
   focused_tab_id: "t1",

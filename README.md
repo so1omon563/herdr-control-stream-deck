@@ -26,12 +26,30 @@ Herdr Control brings workspace, tab, pane, and agent navigation from [Herdr](htt
 Only the exact versions and hardware listed in the
 [support matrix](docs/SUPPORT.md) are covered by current test evidence.
 
+### Supported install locations
+
+Herdr Control looks for the `herdr` executable at `/opt/homebrew/bin/herdr`,
+`/usr/local/bin/herdr`, `~/.local/bin/herdr`, and `~/.cargo/bin/herdr`.
+
+Supported terminal applications are discovered in these locations:
+
+- Ghostty: `/Applications/Ghostty.app` or `~/Applications/Ghostty.app`
+- kitty: `/Applications/kitty.app` or `~/Applications/kitty.app`
+- iTerm2: `iTerm.app` or `iTerm2.app` under `/Applications` or `~/Applications`
+- Terminal.app: `/System/Applications/Utilities/Terminal.app` or `/Applications/Utilities/Terminal.app`
+
+If an action displays `INSTALL HERDR`, install Herdr in one of the supported
+locations. `INSTALL <TERMINAL>` means the selected terminal is unavailable;
+install it or select another terminal in the action settings. `NO TERMINAL`
+means Auto could not find any supported terminal. Detailed failures are written
+under `~/Library/Application Support/com.elgato.StreamDeck/Plugins/` in
+`com.so1omon563.herdr-control.sdPlugin/logs/`.
+
 ## Known limitations
 
 - Spaces, Sidebar, Rename, and Close currently support only Herdr's default keybindings. Herdr Control blocks an affected action when it detects a relevant override instead of sending the wrong default sequence.
 - The current build and installation process is for development only.
 - Other Stream Deck models have not been tested yet.
-- Missing Herdr and unavailable terminals currently produce only Stream Deck's generic error indicator.
 
 ### Custom Herdr keybindings
 

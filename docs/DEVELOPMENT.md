@@ -87,5 +87,5 @@ Security → Accessibility**, and left **Elgato Stream Deck** disabled for the
 user to approve. Enabling the grant restored the action immediately.
 
 The validation suite directly covers the missing-Herdr, unavailable selected
-terminal, no-supported-terminal, Accessibility, and Automation error paths.
-The remaining user-visible diagnostic work is tracked separately.
+terminal, no-supported-terminal, Accessibility, and Automation error paths and
+their user-visible feedback mapping.
