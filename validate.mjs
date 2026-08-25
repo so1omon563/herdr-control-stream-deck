@@ -20,6 +20,12 @@ const icons = [
 ];
 const dialIcons = ["dial-workspace.svg", "dial-tab.svg", "dial-pane.svg", "dial-agent.svg"];
 
+const packageManifest = JSON.parse(readFileSync(join(root, "package.json")));
+assert.equal(packageManifest.license, "MIT");
+const license = readFileSync(join(root, "LICENSE"), "utf8");
+assert.equal(readFileSync(join(plugin, "LICENSE"), "utf8"), license);
+assert.match(license, /Copyright \(c\) 2026 Jedidiah Foster/);
+
 const pluginManifest = JSON.parse(readFileSync(join(plugin, "manifest.json")));
 assert.equal(pluginManifest.Version, "0.1.0.0");
 assert.equal(pluginManifest.UUID, "com.so1omon563.herdr-control");

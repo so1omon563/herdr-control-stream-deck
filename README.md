@@ -51,6 +51,10 @@ This packages the plugin but does not install or publish it.
 
 See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the repository layout and [docs/ROADMAP.md](docs/ROADMAP.md) for the release blockers.
 
+## License
+
+Herdr Control is available under the [MIT License](LICENSE).
+
 ## Project identity
 
 - Product: **Herdr Control**

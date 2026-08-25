@@ -2,7 +2,6 @@
 
 ## Release blockers
 
-- Decide and add the repository license.
 - Document tested Herdr, Stream Deck, macOS, terminal, and hardware versions.
 - Test upgrades, uninstall behavior, first-run permissions, and missing-Herdr errors.
 
