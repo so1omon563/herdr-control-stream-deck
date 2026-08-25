@@ -1,0 +1,15 @@
+{
+  "Device": {
+    "Model": "20GBD9901",
+    "UUID": ""
+  },
+  "InstalledByPluginUUID": "com.so1omon563.herdr-control",
+  "Name": "HERDR Plus",
+  "Pages": {
+    "Current": "a2e7c5f3-b9d4-4e1f-8c63-10b6a98d7420",
+    "Default": "a2e7c5f3-b9d4-4e1f-8c63-10b6a98d7420",
+    "Pages": ["a2e7c5f3-b9d4-4e1f-8c63-10b6a98d7420"]
+  },
+  "PreconfiguredName": "profiles/HERDR Plus",
+  "Version": "3.0"
+}

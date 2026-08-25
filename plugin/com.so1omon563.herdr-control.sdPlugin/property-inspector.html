@@ -1,0 +1,56 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>HERDR terminal</title>
+  <style>
+    :root { color-scheme: dark; font: 13px system-ui, sans-serif; }
+    body { margin: 16px; color: #ddd; background: #2d2d2d; visibility: hidden; }
+    body.ready { visibility: visible; }
+    label { display: block; margin-bottom: 6px; font-weight: 600; }
+    select { box-sizing: border-box; width: 100%; padding: 6px; color: #fff; background: #3d3d3d; border: 1px solid #666; border-radius: 4px; }
+    p { margin: 10px 0 0; color: #aaa; line-height: 1.35; }
+  </style>
+</head>
+<body>
+  <label for="terminal">Terminal</label>
+  <select id="terminal">
+    <option value="auto">Auto</option>
+    <option value="ghostty">Ghostty</option>
+    <option value="kitty">kitty</option>
+    <option value="iterm">iTerm2</option>
+    <option value="terminal">Terminal.app</option>
+  </select>
+  <p>Auto uses the first installed terminal in this order: Ghostty, kitty, iTerm2, then Terminal.app.</p>
+  <script>
+    let socket;
+    let context;
+    const terminal = document.getElementById("terminal");
+
+    terminal.addEventListener("change", () => {
+      socket?.send(JSON.stringify({
+        event: "setGlobalSettings",
+        context,
+        payload: { terminal: terminal.value }
+      }));
+    });
+
+    window.connectElgatoStreamDeckSocket = (port, uuid, registerEvent) => {
+      context = uuid;
+      socket = new WebSocket(`ws://127.0.0.1:${port}`);
+      socket.addEventListener("open", () => {
+        socket.send(JSON.stringify({ event: registerEvent, uuid }));
+        socket.send(JSON.stringify({ event: "getGlobalSettings", context }));
+        document.body.classList.add("ready");
+      });
+      socket.addEventListener("message", event => {
+        const message = JSON.parse(String(event.data));
+        if (message.event === "didReceiveGlobalSettings") {
+          terminal.value = message.payload?.settings?.terminal ?? "auto";
+        }
+      });
+    };
+  </script>
+</body>
+</html>

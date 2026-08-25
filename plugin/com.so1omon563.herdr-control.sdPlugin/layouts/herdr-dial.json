@@ -1,0 +1,38 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/layout.json",
+  "id": "herdr-dial",
+  "items": [
+    {
+      "key": "glyph",
+      "type": "pixmap",
+      "rect": [12, 18, 48, 48]
+    },
+    {
+      "key": "label",
+      "type": "text",
+      "rect": [72, 10, 116, 20],
+      "font": { "size": 14, "weight": 700 },
+      "alignment": "left",
+      "color": "#7DF9FF",
+      "text-overflow": "ellipsis"
+    },
+    {
+      "key": "value",
+      "type": "text",
+      "rect": [72, 36, 116, 22],
+      "font": { "size": 17, "weight": 600 },
+      "alignment": "left",
+      "color": "#FFFFFF",
+      "text-overflow": "ellipsis"
+    },
+    {
+      "key": "hint",
+      "type": "text",
+      "rect": [12, 76, 176, 16],
+      "font": { "size": 9, "weight": 500 },
+      "alignment": "center",
+      "color": "#A9B3BD",
+      "text-overflow": "clip"
+    }
+  ]
+}

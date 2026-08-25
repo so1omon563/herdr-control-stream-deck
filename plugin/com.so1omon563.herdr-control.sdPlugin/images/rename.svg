@@ -1,0 +1,8 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="1.5" y="1.5" width="141" height="141" rx="20.5" fill="#171923" stroke="#7DF9FF" stroke-width="3"/>
+  <g id="Glyph">
+    <path d="M44 82L49 64L79 34L95 50L65 80L44 82Z" stroke="#D9DAD8" stroke-width="6.46154" stroke-linejoin="round"/>
+    <path d="M74 39L90 55M49 64L65 80" stroke="#D9DAD8" stroke-width="6.46154" stroke-linecap="round"/>
+    <path d="M42 91H102" stroke="#7DF9FF" stroke-width="6.46154" stroke-linecap="round"/>
+  </g>
+</svg>

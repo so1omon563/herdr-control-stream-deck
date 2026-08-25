@@ -1,0 +1,103 @@
+{
+  "$schema": "https://schemas.elgato.com/streamdeck/plugins/manifest.json",
+  "Actions": [
+    {
+      "Controllers": ["Keypad"],
+      "DisableAutomaticStates": true,
+      "Icon": "images/idle",
+      "Name": "Herdr Control",
+      "PropertyInspectorPath": "property-inspector.html",
+      "States": [
+        {
+          "Image": "images/idle",
+          "Name": "Open Herdr"
+        },
+        {
+          "Image": "images/attached",
+          "Name": "Return to Herdr"
+        }
+      ],
+      "UUID": "com.so1omon563.herdr-control.toggle"
+    },
+    {
+      "Controllers": ["Keypad"],
+      "Icon": "images/command",
+      "Name": "Herdr Command",
+      "States": [
+        {
+          "Image": "images/command",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "UUID": "com.so1omon563.herdr-control.command",
+      "VisibleInActionsList": false
+    },
+    {
+      "Controllers": ["Keypad"],
+      "Icon": "images/back",
+      "Name": "Return to Previous Profile",
+      "States": [
+        {
+          "Image": "images/back",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "UUID": "com.so1omon563.herdr-control.back",
+      "VisibleInActionsList": false
+    },
+    {
+      "Controllers": ["Encoder"],
+      "Encoder": {
+        "Icon": "images/command",
+        "layout": "layouts/herdr-dial.json",
+        "StackColor": "#2f9dad",
+        "TriggerDescription": {
+          "Rotate": "Navigate",
+          "Push": "Primary action"
+        }
+      },
+      "Icon": "images/command",
+      "Name": "HERDR Dial",
+      "States": [
+        {
+          "Image": "images/command"
+        }
+      ],
+      "UUID": "com.so1omon563.herdr-control.encoder",
+      "VisibleInActionsList": false
+    }
+  ],
+  "Author": "so1omon563",
+  "CodePath": "plugin",
+  "Description": "Open or return to Herdr in Ghostty, kitty, iTerm2, or Terminal.app and automatically show the bundled Stream Deck or Stream Deck+ controls while it is focused.",
+  "Icon": "images/idle",
+  "Name": "Herdr Control",
+  "OS": [
+    {
+      "Platform": "mac",
+      "MinimumVersion": "13"
+    }
+  ],
+  "Profiles": [
+    {
+      "AutoInstall": true,
+      "DeviceType": 0,
+      "DontAutoSwitchWhenInstalled": true,
+      "Name": "profiles/HERDR",
+      "Readonly": false
+    },
+    {
+      "AutoInstall": true,
+      "DeviceType": 7,
+      "DontAutoSwitchWhenInstalled": true,
+      "Name": "profiles/HERDR Plus",
+      "Readonly": false
+    }
+  ],
+  "SDKVersion": 2,
+  "Software": {
+    "MinimumVersion": "6.6"
+  },
+  "UUID": "com.so1omon563.herdr-control",
+  "Version": "0.1.0.0"
+}

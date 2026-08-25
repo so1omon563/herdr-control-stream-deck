@@ -1,0 +1,100 @@
+{
+  "Controllers": [
+    {
+      "Actions": {
+        "0,0": {
+          "Name": "Workspace Picker",
+          "Settings": { "command": "workspace-picker" },
+          "State": 0,
+          "States": [{ "Title": "SPACES", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
+          "UUID": "com.so1omon563.herdr-control.command"
+        },
+        "1,0": {
+          "Name": "Toggle Sidebar",
+          "Settings": { "command": "sidebar" },
+          "State": 0,
+          "States": [{ "Title": "SIDEBAR", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
+          "UUID": "com.so1omon563.herdr-control.command"
+        },
+        "2,0": {
+          "Name": "Rename",
+          "Settings": { "ProfileUUID": "6b2c84e0-ad9c-4d13-98e6-5b8fd2b3c401" },
+          "State": 0,
+          "States": [{ "Title": "RENAME", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12, "Image": "Images/rename.png" }],
+          "UUID": "com.elgato.streamdeck.profile.openchild"
+        },
+        "3,0": {
+          "Name": "Close",
+          "Settings": { "ProfileUUID": "3fd8b9a7-1976-4e21-bb12-a1f27947d502" },
+          "State": 0,
+          "States": [{ "Title": "CLOSE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12, "Image": "Images/close.png" }],
+          "UUID": "com.elgato.streamdeck.profile.openchild"
+        },
+        "0,1": {
+          "Name": "Split Right",
+          "Settings": { "command": "split-right" },
+          "State": 0,
+          "States": [{ "Title": "SPLIT →", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
+          "UUID": "com.so1omon563.herdr-control.command"
+        },
+        "1,1": {
+          "Name": "Split Down",
+          "Settings": { "command": "split-down" },
+          "State": 0,
+          "States": [{ "Title": "SPLIT ↓", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
+          "UUID": "com.so1omon563.herdr-control.command"
+        },
+        "2,1": {
+          "Name": "Detach HERDR",
+          "Settings": { "command": "detach" },
+          "State": 0,
+          "States": [{ "Title": "DETACH", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
+          "UUID": "com.so1omon563.herdr-control.command"
+        },
+        "3,1": {
+          "Name": "Return to Previous Profile",
+          "Settings": {},
+          "State": 0,
+          "States": [{ "Title": "BACK", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
+          "UUID": "com.so1omon563.herdr-control.back"
+        }
+      },
+      "Type": "Keypad"
+    },
+    {
+      "Actions": {
+        "0,0": {
+          "Name": "Workspaces",
+          "Settings": { "dial": "workspace" },
+          "State": 0,
+          "States": [{ "Title": "WORKSPACE" }],
+          "UUID": "com.so1omon563.herdr-control.encoder"
+        },
+        "1,0": {
+          "Name": "Tabs",
+          "Settings": { "dial": "tabs" },
+          "State": 0,
+          "States": [{ "Title": "TAB" }],
+          "UUID": "com.so1omon563.herdr-control.encoder"
+        },
+        "2,0": {
+          "Name": "Panes",
+          "Settings": { "dial": "panes" },
+          "State": 0,
+          "States": [{ "Title": "PANE" }],
+          "UUID": "com.so1omon563.herdr-control.encoder"
+        },
+        "3,0": {
+          "Name": "HERDR",
+          "Settings": { "dial": "client" },
+          "State": 0,
+          "States": [{ "Title": "HERDR" }],
+          "UUID": "com.so1omon563.herdr-control.encoder"
+        }
+      },
+      "Type": "Encoder"
+    }
+  ],
+  "Icon": "",
+  "Name": "HERDR Plus"
+}

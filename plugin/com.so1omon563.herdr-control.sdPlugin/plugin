@@ -1,0 +1,19 @@
+#!/bin/zsh
+node_candidates=(
+  /opt/homebrew/bin/node
+  /usr/local/bin/node
+  "$HOME/Library/Application Support/com.elgato.StreamDeck/NodeJS"/*/node(N)
+)
+
+for node_path in $node_candidates; do
+  if [[ -x "$node_path" ]]; then
+    exec "$node_path" "${0:A:h}/plugin.js" "$@"
+  fi
+done
+
+if command -v node >/dev/null 2>&1; then
+  exec node "${0:A:h}/plugin.js" "$@"
+fi
+
+print -u2 "Herdr Control requires Node.js, but no Node executable was found."
+exit 127

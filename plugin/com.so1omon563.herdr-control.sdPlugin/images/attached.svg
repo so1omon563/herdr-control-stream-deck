@@ -1,0 +1,21 @@
+<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+<rect width="144" height="144" fill="#F5F5F5"/>
+<g id="Catalog/Grid">
+<path d="M-256 -18C-256 -30.1502 -246.15 -40 -234 -40H802C814.15 -40 824 -30.1503 824 -18V886C824 898.15 814.15 908 802 908H-234C-246.15 908 -256 898.15 -256 886V-18Z" fill="#171923"/>
+<g id="Asset/herdr-toggle-attached">
+<g id="herdr-toggle-attached">
+<mask id="path-2-inside-1_6_7" fill="white">
+<path d="M0 22C0 9.84974 9.84974 0 22 0H122C134.15 0 144 9.84974 144 22V122C144 134.15 134.15 144 122 144H22C9.84974 144 0 134.15 0 122V22Z"/>
+</mask>
+<path d="M0 22C0 9.84974 9.84974 0 22 0H122C134.15 0 144 9.84974 144 22V122C144 134.15 134.15 144 122 144H22C9.84974 144 0 134.15 0 122V22Z" fill="#10251A"/>
+<path d="M22 0V3H122V0V-3H22V0ZM144 22H141V122H144H147V22H144ZM122 144V141H22V144V147H122V144ZM0 122H3V22H0H-3V122H0ZM22 144V141C11.5066 141 3 132.493 3 122H0H-3C-3 135.807 8.19288 147 22 147V144ZM144 122H141C141 132.493 132.493 141 122 141V144V147C135.807 147 147 135.807 147 122H144ZM122 0V3C132.493 3 141 11.5066 141 22H144H147C147 8.19288 135.807 -3 122 -3V0ZM22 0V-3C8.19288 -3 -3 8.19288 -3 22H0H3C3 11.5066 11.5066 3 22 3V0Z" fill="#5AF7A4" mask="url(#path-2-inside-1_6_7)"/>
+<g id="Glyph/HERDR Mark">
+<g id="Artwork/B3 Focus Brackets">
+<path id="Accent/Focus Brackets" d="M50 36H36V108H50M94 36H108V108H94" stroke="#5AF7A4" stroke-width="7" stroke-linecap="round" stroke-linejoin="round"/>
+<path id="Mark/H" d="M57 50V94M87 50V94M57 72H87" stroke="#D9DAD8" stroke-width="8" stroke-linecap="round"/>
+</g>
+</g>
+</g>
+</g>
+</g>
+</svg>
