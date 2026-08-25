@@ -62,3 +62,7 @@ This test exposed an unsupported `1.1` profile format version in the 15-key
 archive. Stream Deck logged the import as corrupted and rejected it. The
 15-key source now uses the supported `1.0` format, matching Elgato's bundled
 15-key profiles, and the rebuilt archive imports successfully.
+
+A hardware smoke test placed `com.so1omon563.herdr-control.toggle` on the
+existing 15-key default profile and confirmed that pressing it opens Herdr and
+returns to the previous application as expected.
