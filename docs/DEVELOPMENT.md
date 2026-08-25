@@ -49,3 +49,16 @@ The command validates the plugin and writes
 `dist/com.so1omon563.herdr-control.streamDeckPlugin`, replacing an existing
 local artifact. The plugin's `.sdignore` excludes Finder metadata. Packaging
 does not install, publish, or submit the plugin.
+
+## Clean-install validation
+
+The personal package was clean-installed with Stream Deck 7.5.0 (22885) on a
+15-key Stream Deck and a Stream Deck+. The installed plugin reported UUID
+`com.so1omon563.herdr-control`, version `0.1.0.0`, and author `so1omon563`.
+Both bundled profiles installed for their intended devices, and the existing
+default profiles remained intact.
+
+This test exposed an unsupported `1.1` profile format version in the 15-key
+archive. Stream Deck logged the import as corrupted and rejected it. The
+15-key source now uses the supported `1.0` format, matching Elgato's bundled
+15-key profiles, and the rebuilt archive imports successfully.

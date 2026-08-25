@@ -44,7 +44,7 @@ for (const [index, item] of dialLayout.items.entries()) {
 }
 for (const file of [profile, embeddedProfile]) {
   const manifest = JSON.parse(readFileSync(file));
-  assert.equal(manifest.Version, "1.1");
+  assert.equal(manifest.Version, "1.0");
   for (const action of Object.values(manifest.Actions)) {
     assert.equal(action.States[0].FSize, "12");
   }
