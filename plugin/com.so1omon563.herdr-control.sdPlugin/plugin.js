@@ -87,6 +87,10 @@ const COMMAND_TITLES = {
   "tab-next": "NEXT\nTAB",
   "split-right": "SPLIT\n→",
   "split-down": "SPLIT\n↓",
+  "resize-left": "",
+  "resize-right": "",
+  "resize-up": "",
+  "resize-down": "",
   "sidebar": "SIDEBAR",
   "zoom": "ZOOM",
   "pane-left": "PREV\nPANE",
@@ -110,6 +114,10 @@ const COMMAND_IMAGES = {
   "tab-next": "images/tab-next.svg",
   "split-right": "images/split-right.svg",
   "split-down": "images/split-down.svg",
+  "resize-left": "images/resize-left.svg",
+  "resize-right": "images/resize-right.svg",
+  "resize-up": "images/resize-up.svg",
+  "resize-down": "images/resize-down.svg",
   "sidebar": "images/sidebar.svg",
   "zoom": "images/zoom.svg",
   "pane-left": "images/pane-left.svg",
@@ -120,7 +128,7 @@ const DEFAULT_COMMAND = "workspace-next";
 
 function commandForSettings(settings = {}) {
   const command = settings?.command;
-  return COMMAND_TITLES[command] && COMMAND_IMAGES[command] ? command : DEFAULT_COMMAND;
+  return Object.hasOwn(COMMAND_TITLES, command) && Object.hasOwn(COMMAND_IMAGES, command) ? command : DEFAULT_COMMAND;
 }
 
 function commandSettings(settings = {}) {
@@ -622,6 +630,9 @@ function paneCommandArgs(command, paneId, direction) {
   if (command === "split-right" || command === "split-down") {
     return ["pane", "split", "--pane", paneId, "--direction", command === "split-right" ? "right" : "down", "--focus"];
   }
+  if (command.startsWith("resize-")) {
+    return ["pane", "resize", "--pane", paneId, "--direction", command.slice("resize-".length)];
+  }
   if (command === "zoom") return ["pane", "zoom", "--pane", paneId, "--toggle"];
   return ["pane", "focus", "--pane", paneId, "--direction", direction];
 }
@@ -667,7 +678,7 @@ async function executeCommand(command) {
     return detach(client);
   }
 
-  if (["split-right", "split-down", "zoom"].includes(command)) {
+  if (["split-right", "split-down", "resize-left", "resize-right", "resize-up", "resize-down", "zoom"].includes(command)) {
     const state = await snapshot();
     return run(herdrExecutable(), paneCommandArgs(command, state.focused_pane_id));
   }

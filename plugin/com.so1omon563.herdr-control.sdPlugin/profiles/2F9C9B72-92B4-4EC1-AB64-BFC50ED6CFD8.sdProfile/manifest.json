@@ -4,105 +4,105 @@
       "Name": "Previous Workspace",
       "Settings": { "command": "workspace-prev" },
       "State": 0,
-      "States": [{ "Title": "PREV\nSPACE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "PREV\nSPACE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "1,0": {
       "Name": "Workspace Picker",
       "Settings": { "command": "workspace-picker" },
       "State": 0,
-      "States": [{ "Title": "SPACES", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "SPACES", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "2,0": {
       "Name": "Next Workspace",
       "Settings": { "command": "workspace-next" },
       "State": 0,
-      "States": [{ "Title": "NEXT\nSPACE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "NEXT\nSPACE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "3,0": {
       "Name": "New Workspace",
       "Settings": { "command": "workspace-new" },
       "State": 0,
-      "States": [{ "Title": "NEW\nSPACE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "NEW\nSPACE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "4,0": {
       "Name": "Detach Herdr",
       "Settings": { "command": "detach" },
       "State": 0,
-      "States": [{ "Title": "DETACH", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "DETACH", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "0,1": {
       "Name": "New Tab",
       "Settings": { "command": "tab-new" },
       "State": 0,
-      "States": [{ "Title": "NEW TAB", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "NEW TAB", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "1,1": {
       "Name": "Previous Tab",
       "Settings": { "command": "tab-prev" },
       "State": 0,
-      "States": [{ "Title": "PREV TAB", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "PREV TAB", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "2,1": {
       "Name": "Next Tab",
       "Settings": { "command": "tab-next" },
       "State": 0,
-      "States": [{ "Title": "NEXT TAB", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "NEXT TAB", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "3,1": {
       "Name": "Split Right",
       "Settings": { "command": "split-right" },
       "State": 0,
-      "States": [{ "Title": "SPLIT →", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "SPLIT →", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "4,1": {
       "Name": "Split Down",
       "Settings": { "command": "split-down" },
       "State": 0,
-      "States": [{ "Title": "SPLIT ↓", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "SPLIT ↓", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "0,2": {
       "Name": "Toggle Sidebar",
       "Settings": { "command": "sidebar" },
       "State": 0,
-      "States": [{ "Title": "SIDEBAR", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "SIDEBAR", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "1,2": {
       "Name": "Toggle Zoom",
       "Settings": { "command": "zoom" },
       "State": 0,
-      "States": [{ "Title": "ZOOM", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "ZOOM", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "2,2": {
       "Name": "Focus Pane Left",
       "Settings": { "command": "pane-left" },
       "State": 0,
-      "States": [{ "Title": "PREV PANE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "PREV PANE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "3,2": {
       "Name": "Focus Pane Right",
       "Settings": { "command": "pane-right" },
       "State": 0,
-      "States": [{ "Title": "NEXT PANE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "NEXT PANE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "4,2": {
       "Name": "Return to Previous Profile",
       "Settings": {},
       "State": 0,
-      "States": [{ "Title": "BACK", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "TitleShow": "on", "FSize": "12" }],
+      "States": [{ "Title": "BACK", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.back"
     }
   },

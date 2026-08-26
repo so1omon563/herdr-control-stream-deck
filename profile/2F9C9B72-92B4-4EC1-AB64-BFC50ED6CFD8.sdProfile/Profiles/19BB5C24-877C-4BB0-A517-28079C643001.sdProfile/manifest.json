@@ -1,0 +1,28 @@
+{
+  "Actions": {
+    "0,0": {
+      "Name": "Parent Folder",
+      "Settings": {},
+      "State": 0,
+      "States": [{}],
+      "UUID": "com.elgato.streamdeck.profile.backtoparent"
+    },
+    "1,0": {
+      "Name": "Workspace Picker",
+      "Settings": { "command": "workspace-picker" },
+      "State": 0,
+      "States": [{ "Title": "SPACES", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
+      "UUID": "com.so1omon563.herdr-control.command"
+    },
+    "2,0": {
+      "Name": "Resize",
+      "Settings": { "ProfileUUID": "19bb5c24-877c-4bb0-a517-28079c643002" },
+      "State": 0,
+      "States": [{ "Title": "RESIZE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12, "Image": "state0.png" }],
+      "UUID": "com.elgato.streamdeck.profile.openchild"
+    }
+  },
+  "DeviceModel": "20GBA9901",
+  "Name": "Spaces",
+  "Version": "1.0"
+}
