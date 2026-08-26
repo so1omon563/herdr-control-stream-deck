@@ -1,0 +1,50 @@
+{
+  "Controllers": [
+    {
+      "Actions": {
+        "0,0": {
+          "Name": "Parent Folder",
+          "Settings": {},
+          "State": 0,
+          "States": [{}],
+          "UUID": "com.elgato.streamdeck.profile.backtoparent"
+        },
+        "1,0": {
+          "Name": "Resize Left",
+          "Settings": { "command": "resize-left" },
+          "State": 0,
+          "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": false, "FontSize": 12 }],
+          "UUID": "com.so1omon563.herdr-control.command"
+        },
+        "2,0": {
+          "Name": "Resize Up",
+          "Settings": { "command": "resize-up" },
+          "State": 0,
+          "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": false, "FontSize": 12 }],
+          "UUID": "com.so1omon563.herdr-control.command"
+        },
+        "3,0": {
+          "Name": "Resize Right",
+          "Settings": { "command": "resize-right" },
+          "State": 0,
+          "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": false, "FontSize": 12 }],
+          "UUID": "com.so1omon563.herdr-control.command"
+        },
+        "2,1": {
+          "Name": "Resize Down",
+          "Settings": { "command": "resize-down" },
+          "State": 0,
+          "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": false, "FontSize": 12 }],
+          "UUID": "com.so1omon563.herdr-control.command"
+        }
+      },
+      "Type": "Keypad"
+    },
+    {
+      "Actions": null,
+      "Type": "Encoder"
+    }
+  ],
+  "Icon": "",
+  "Name": "Resize"
+}
