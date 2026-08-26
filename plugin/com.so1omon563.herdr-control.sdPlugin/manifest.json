@@ -27,14 +27,14 @@
       ],
       "Icon": "images/command",
       "Name": "Herdr Command",
+      "PropertyInspectorPath": "property-inspector.html",
       "States": [
         {
           "Image": "images/command",
           "TitleAlignment": "bottom"
         }
       ],
-      "UUID": "com.so1omon563.herdr-control.command",
-      "VisibleInActionsList": false
+      "UUID": "com.so1omon563.herdr-control.command"
     },
     {
       "Controllers": [
