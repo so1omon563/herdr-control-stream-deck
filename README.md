@@ -13,6 +13,7 @@ Herdr Control brings workspace, tab, pane, and agent navigation from [Herdr](htt
 - Navigate, split, and zoom panes, including mixed horizontal and vertical layouts.
 - Browse and focus agents from a Stream Deck+ dial.
 - Open Herdr-native rename and close interactions.
+- Add configurable Herdr Command actions to custom Stream Deck profiles.
 
 ## Requirements
 

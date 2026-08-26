@@ -116,6 +116,27 @@ const COMMAND_IMAGES = {
   "pane-right": "images/pane-right.svg"
 };
 
+const DEFAULT_COMMAND = "workspace-next";
+
+function commandForSettings(settings = {}) {
+  const command = settings?.command;
+  return COMMAND_TITLES[command] && COMMAND_IMAGES[command] ? command : DEFAULT_COMMAND;
+}
+
+function commandSettings(settings = {}) {
+  const current = settings && typeof settings === "object" && !Array.isArray(settings) ? settings : {};
+  return { ...current, command: commandForSettings(current) };
+}
+
+function commandPresentation(settings = {}) {
+  const command = commandForSettings(settings);
+  return { command, title: COMMAND_TITLES[command], image: COMMAND_IMAGES[command] };
+}
+
+function errorRestoreTitle(info, originalTitle) {
+  return info?.action === COMMAND_UUID ? commandPresentation(info.settings).title : originalTitle;
+}
+
 const HERDR_PREFIX_COMMANDS = {
   "rename-workspace": [13, true],
   "rename-tab": [17, true],
@@ -742,6 +763,21 @@ function setImage(context, image) {
   send({ event: "setImage", context, payload: { image } });
 }
 
+function setSettings(context, settings) {
+  send({ event: "setSettings", context, payload: settings });
+}
+
+function syncCommand(context, settings, persistDefault = false) {
+  const normalized = commandSettings(settings);
+  const info = contextInfo.get(context);
+  if (info) info.settings = normalized;
+  const presentation = commandPresentation(normalized);
+  setTitle(context, presentation.title);
+  setImage(context, presentation.image);
+  if (persistDefault && settings?.command !== normalized.command) setSettings(context, normalized);
+  return normalized.command;
+}
+
 function setFeedback(context, payload) {
   send({ event: "setFeedback", context, payload });
 }
@@ -785,7 +821,7 @@ function showError(context, error, originalTitle) {
   const feedback = errorFeedback(error);
   if (feedback) {
     setTitle(context, feedback.title);
-    setTimeout(() => setTitle(context, originalTitle), 3000);
+    setTimeout(() => setTitle(context, errorRestoreTitle(contextInfo.get(context), originalTitle)), 3000);
     if (feedback.pane) {
       run("/usr/bin/open", [`x-apple.systempreferences:com.apple.preference.security?${feedback.pane}`], 5000).catch(() => {});
     }
@@ -1011,17 +1047,16 @@ function connectPlugin() {
     if (![TOGGLE_UUID, COMMAND_UUID, BACK_UUID, ENCODER_UUID].includes(message.action)) return;
 
     if (message.event === "willAppear") {
+      const settings = message.payload?.settings ?? {};
       knownDevices.add(message.device);
       contextInfo.set(message.context, {
         action: message.action,
         device: message.device,
-        settings: message.payload?.settings ?? {}
+        settings
       });
       if (message.action === TOGGLE_UUID) toggleContexts.add(message.context);
       if (message.action === COMMAND_UUID) {
-        const command = message.payload?.settings?.command;
-        setTitle(message.context, COMMAND_TITLES[command] ?? "HERDR");
-        setImage(message.context, COMMAND_IMAGES[command] ?? "images/command.svg");
+        syncCommand(message.context, settings, true);
       } else if (message.action === BACK_UUID) {
         setTitle(message.context, "BACK");
       } else if (message.action === ENCODER_UUID) {
@@ -1033,9 +1068,13 @@ function connectPlugin() {
       contextInfo.delete(message.context);
       toggleContexts.delete(message.context);
       agentSelections.delete(message.context);
+    } else if (message.event === "didReceiveSettings" && message.action === COMMAND_UUID) {
+      syncCommand(message.context, message.payload?.settings ?? {}, true);
     } else if (message.event === "keyUp") {
       if (message.action === TOGGLE_UUID) toggle(message.context);
-      else if (message.action === COMMAND_UUID) runCommand(message.context, message.payload?.settings?.command);
+      else if (message.action === COMMAND_UUID) {
+        runCommand(message.context, commandForSettings(message.payload?.settings ?? contextInfo.get(message.context)?.settings));
+      }
       else if (message.action === BACK_UUID) returnToPreviousProfile(message.context);
     } else if (message.action === ENCODER_UUID && ["dialRotate", "dialUp", "touchTap"].includes(message.event)) {
       const dial = message.payload?.settings?.dial ?? contextInfo.get(message.context)?.settings?.dial;
@@ -1044,5 +1083,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, errorFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds };
+module.exports = { agentCommandArgs, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds };
 if (require.main === module) connectPlugin();

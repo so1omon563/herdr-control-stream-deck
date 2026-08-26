@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>HERDR terminal</title>
+  <title>Herdr Control settings</title>
   <style>
     :root { color-scheme: dark; font: 13px system-ui, sans-serif; }
     body { margin: 16px; color: #ddd; background: #2d2d2d; visibility: hidden; }
@@ -11,22 +11,69 @@
     label { display: block; margin-bottom: 6px; font-weight: 600; }
     select { box-sizing: border-box; width: 100%; padding: 6px; color: #fff; background: #3d3d3d; border: 1px solid #666; border-radius: 4px; }
     p { margin: 10px 0 0; color: #aaa; line-height: 1.35; }
+    section[hidden] { display: none; }
   </style>
 </head>
 <body>
-  <label for="terminal">Terminal</label>
-  <select id="terminal">
-    <option value="auto">Auto</option>
-    <option value="ghostty">Ghostty</option>
-    <option value="kitty">kitty</option>
-    <option value="iterm">iTerm2</option>
-    <option value="terminal">Terminal.app</option>
-  </select>
-  <p>Auto uses the first installed terminal in this order: Ghostty, kitty, iTerm2, then Terminal.app.</p>
+  <section id="terminal-settings" hidden>
+    <label for="terminal">Terminal</label>
+    <select id="terminal">
+      <option value="auto">Auto</option>
+      <option value="ghostty">Ghostty</option>
+      <option value="kitty">kitty</option>
+      <option value="iterm">iTerm2</option>
+      <option value="terminal">Terminal.app</option>
+    </select>
+    <p>Auto uses the first installed terminal in this order: Ghostty, kitty, iTerm2, then Terminal.app.</p>
+  </section>
+  <section id="command-settings" hidden>
+    <label for="command">Command</label>
+    <select id="command">
+      <optgroup label="Workspaces">
+        <option value="workspace-next">Next Workspace</option>
+        <option value="workspace-prev">Previous Workspace</option>
+        <option value="workspace-new">New Workspace</option>
+        <option value="workspace-picker">Workspace Picker</option>
+      </optgroup>
+      <optgroup label="Tabs">
+        <option value="tab-next">Next Tab</option>
+        <option value="tab-prev">Previous Tab</option>
+        <option value="tab-new">New Tab</option>
+      </optgroup>
+      <optgroup label="Panes">
+        <option value="pane-right">Next Pane</option>
+        <option value="pane-left">Previous Pane</option>
+        <option value="split-right">Split Right</option>
+        <option value="split-down">Split Down</option>
+        <option value="zoom">Toggle Zoom</option>
+      </optgroup>
+      <optgroup label="Session">
+        <option value="sidebar">Toggle Sidebar</option>
+        <option value="detach">Detach</option>
+      </optgroup>
+      <optgroup label="Rename">
+        <option value="rename-workspace">Rename Workspace</option>
+        <option value="rename-tab">Rename Tab</option>
+        <option value="rename-pane">Rename Pane</option>
+      </optgroup>
+      <optgroup label="Close">
+        <option value="close-workspace">Close Workspace</option>
+        <option value="close-tab">Close Tab</option>
+        <option value="close-pane">Close Pane</option>
+      </optgroup>
+    </select>
+    <p>The key title and icon follow the selected command automatically.</p>
+  </section>
   <script>
+    const COMMAND_UUID = "com.so1omon563.herdr-control.command";
     let socket;
     let context;
+    let action;
+    let settings = {};
     const terminal = document.getElementById("terminal");
+    const command = document.getElementById("command");
+    const terminalSettings = document.getElementById("terminal-settings");
+    const commandSettings = document.getElementById("command-settings");
 
     terminal.addEventListener("change", () => {
       socket?.send(JSON.stringify({
@@ -36,18 +83,42 @@
       }));
     });
 
-    window.connectElgatoStreamDeckSocket = (port, uuid, registerEvent) => {
+    command.addEventListener("change", () => {
+      settings = { ...settings, command: command.value };
+      socket?.send(JSON.stringify({
+        event: "setSettings",
+        action,
+        context,
+        payload: settings
+      }));
+    });
+
+    window.connectElgatoStreamDeckSocket = (port, uuid, registerEvent, _info, actionInfoJson) => {
+      const actionInfo = JSON.parse(actionInfoJson);
       context = uuid;
+      action = actionInfo.action;
+      settings = actionInfo.payload?.settings ?? {};
+      if (action === COMMAND_UUID) {
+        command.value = settings.command ?? "workspace-next";
+        commandSettings.hidden = false;
+      } else {
+        terminalSettings.hidden = false;
+      }
       socket = new WebSocket(`ws://127.0.0.1:${port}`);
       socket.addEventListener("open", () => {
         socket.send(JSON.stringify({ event: registerEvent, uuid }));
-        socket.send(JSON.stringify({ event: "getGlobalSettings", context }));
+        if (action !== COMMAND_UUID) {
+          socket.send(JSON.stringify({ event: "getGlobalSettings", context }));
+        }
         document.body.classList.add("ready");
       });
       socket.addEventListener("message", event => {
         const message = JSON.parse(String(event.data));
         if (message.event === "didReceiveGlobalSettings") {
           terminal.value = message.payload?.settings?.terminal ?? "auto";
+        } else if (message.event === "didReceiveSettings") {
+          settings = message.payload?.settings ?? {};
+          command.value = settings.command ?? "workspace-next";
         }
       });
     };

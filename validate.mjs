@@ -30,7 +30,15 @@ const pluginManifest = JSON.parse(readFileSync(join(plugin, "manifest.json")));
 assert.equal(pluginManifest.Version, "0.1.0.0");
 assert.equal(pluginManifest.UUID, "com.so1omon563.herdr-control");
 assert.equal(pluginManifest.Author, "so1omon563");
-assert.equal(pluginManifest.Actions[0].PropertyInspectorPath, "property-inspector.html");
+const toggleAction = pluginManifest.Actions.find(item => item.UUID === "com.so1omon563.herdr-control.toggle");
+const commandAction = pluginManifest.Actions.find(item => item.UUID === "com.so1omon563.herdr-control.command");
+assert.equal(toggleAction.PropertyInspectorPath, "property-inspector.html");
+assert.notEqual(toggleAction.VisibleInActionsList, false);
+assert.equal(commandAction.PropertyInspectorPath, "property-inspector.html");
+assert.notEqual(commandAction.VisibleInActionsList, false);
+for (const uuid of ["com.so1omon563.herdr-control.back", "com.so1omon563.herdr-control.encoder"]) {
+  assert.equal(pluginManifest.Actions.find(item => item.UUID === uuid).VisibleInActionsList, false);
+}
 assert.deepEqual(pluginManifest.Profiles.map(item => item.DeviceType), [0, 7]);
 const encoderAction = pluginManifest.Actions.find(item => item.UUID === "com.so1omon563.herdr-control.encoder");
 assert.deepEqual(encoderAction.Controllers, ["Encoder"]);
@@ -109,8 +117,33 @@ const inspector = readFileSync(join(plugin, "property-inspector.html"), "utf8");
 for (const terminal of ["auto", "ghostty", "kitty", "iterm", "terminal"]) {
   assert.ok(inspector.includes(`value="${terminal}"`), `missing terminal option ${terminal}`);
 }
+const commandSelect = inspector.match(/<select id="command">([\s\S]*?)<\/select>/)?.[1];
+assert.ok(commandSelect, "missing command selector");
+assert.deepEqual([...commandSelect.matchAll(/<option value="([^"]+)">/g)].map(match => match[1]), [
+  "workspace-next", "workspace-prev", "workspace-new", "workspace-picker",
+  "tab-next", "tab-prev", "tab-new",
+  "pane-right", "pane-left", "split-right", "split-down", "zoom",
+  "sidebar", "detach",
+  "rename-workspace", "rename-tab", "rename-pane",
+  "close-workspace", "close-tab", "close-pane"
+]);
+assert.match(inspector, /event:\s*"setSettings"/);
+assert.match(inspector, /action,\s*context,\s*payload: settings/);
 
-const { agentCommandArgs, bindingOverride, encoderCommand, encoderFeedback, errorFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
+const { agentCommandArgs, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
+assert.equal(commandForSettings({}), "workspace-next");
+assert.equal(commandForSettings({ command: "unsupported" }), "workspace-next");
+assert.deepEqual(commandSettings({ custom: true }), { custom: true, command: "workspace-next" });
+assert.deepEqual(commandSettings({ command: "tab-next", custom: true }), { command: "tab-next", custom: true });
+assert.deepEqual(commandPresentation({ command: "split-right" }), {
+  command: "split-right",
+  title: "SPLIT\n→",
+  image: "images/split-right.svg"
+});
+assert.equal(errorRestoreTitle({ action: "com.so1omon563.herdr-control.command", settings: { command: "tab-next" } }, "NEXT\nSPACE"), "NEXT\nTAB");
+assert.equal(errorRestoreTitle({ action: "com.so1omon563.herdr-control.toggle" }, undefined), undefined);
+assert.ok(source.includes("syncCommand(message.context, settings, true)"));
+assert.ok(source.includes("runCommand(message.context, commandForSettings("));
 assert.throws(() => herdrExecutable([]), /HERDR executable not found in a supported install location/);
 await assert.rejects(terminalForLaunch("kitty", () => false), /kitty is not installed/);
 await assert.rejects(terminalForLaunch("auto", () => false), /No supported terminal is installed/);
