@@ -130,7 +130,7 @@ assert.deepEqual([...commandSelect.matchAll(/<option value="([^"]+)">/g)].map(ma
 assert.match(inspector, /event:\s*"setSettings"/);
 assert.match(inspector, /action,\s*context,\s*payload: settings/);
 
-const { agentCommandArgs, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
+const { agentCommandArgs, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
 assert.equal(commandForSettings({}), "workspace-next");
 assert.equal(commandForSettings({ command: "unsupported" }), "workspace-next");
 assert.deepEqual(commandSettings({ custom: true }), { custom: true, command: "workspace-next" });
@@ -140,6 +140,8 @@ assert.deepEqual(commandPresentation({ command: "split-right" }), {
   title: "SPLIT\n→",
   image: "images/split-right.svg"
 });
+assert.equal(errorRestoreTitle({ action: "com.so1omon563.herdr-control.command", settings: { command: "tab-next" } }, "NEXT\nSPACE"), "NEXT\nTAB");
+assert.equal(errorRestoreTitle({ action: "com.so1omon563.herdr-control.toggle" }, undefined), undefined);
 assert.ok(source.includes("syncCommand(message.context, settings, true)"));
 assert.ok(source.includes("runCommand(message.context, commandForSettings("));
 assert.throws(() => herdrExecutable([]), /HERDR executable not found in a supported install location/);

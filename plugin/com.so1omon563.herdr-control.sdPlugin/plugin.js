@@ -133,6 +133,10 @@ function commandPresentation(settings = {}) {
   return { command, title: COMMAND_TITLES[command], image: COMMAND_IMAGES[command] };
 }
 
+function errorRestoreTitle(info, originalTitle) {
+  return info?.action === COMMAND_UUID ? commandPresentation(info.settings).title : originalTitle;
+}
+
 const HERDR_PREFIX_COMMANDS = {
   "rename-workspace": [13, true],
   "rename-tab": [17, true],
@@ -817,7 +821,7 @@ function showError(context, error, originalTitle) {
   const feedback = errorFeedback(error);
   if (feedback) {
     setTitle(context, feedback.title);
-    setTimeout(() => setTitle(context, originalTitle), 3000);
+    setTimeout(() => setTitle(context, errorRestoreTitle(contextInfo.get(context), originalTitle)), 3000);
     if (feedback.pane) {
       run("/usr/bin/open", [`x-apple.systempreferences:com.apple.preference.security?${feedback.pane}`], 5000).catch(() => {});
     }
@@ -1079,5 +1083,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds };
+module.exports = { agentCommandArgs, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds };
 if (require.main === module) connectPlugin();
