@@ -1,0 +1,100 @@
+name: Bug Report
+description: Report a reproducible problem with Herdr Control.
+title: "bug: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thanks for reporting a problem. Use private vulnerability reporting
+        for security issues, and remove personal data from logs and profiles.
+
+  - type: checkboxes
+    id: preflight
+    attributes:
+      label: Pre-flight checks
+      options:
+        - label: I searched the existing issues and did not find this problem.
+          required: true
+        - label: I removed usernames, local paths, workspace names, and other personal data.
+          required: true
+
+  - type: input
+    id: macos
+    attributes:
+      label: macOS version and architecture
+      placeholder: "Example: macOS 26.5.2 on Apple silicon"
+    validations:
+      required: true
+
+  - type: input
+    id: stream-deck
+    attributes:
+      label: Stream Deck software and hardware
+      placeholder: "Example: Stream Deck 7.5.0 with Stream Deck+"
+    validations:
+      required: true
+
+  - type: input
+    id: herdr
+    attributes:
+      label: Herdr and plugin versions
+      placeholder: "Example: Herdr 0.8.2, Herdr Control 0.1.0.0"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: terminal
+    attributes:
+      label: Terminal selection
+      options:
+        - Auto
+        - Ghostty
+        - kitty
+        - iTerm2
+        - Terminal.app
+        - Other or not applicable
+    validations:
+      required: true
+
+  - type: textarea
+    id: description
+    attributes:
+      label: Problem description
+      description: Describe what failed and when it started.
+    validations:
+      required: true
+
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Open or focus Herdr
+        2. Press or rotate ...
+        3. Observe ...
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: diagnostics
+    attributes:
+      label: Sanitized diagnostics
+      description: Include relevant plugin logs after removing personal data.
+      render: shell
+    validations:
+      required: false
