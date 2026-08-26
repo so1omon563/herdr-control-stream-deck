@@ -8,10 +8,10 @@
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "1,0": {
-      "Name": "Spaces",
+      "Name": "More",
       "Settings": { "ProfileUUID": "19bb5c24-877c-4bb0-a517-28079c643001" },
       "State": 0,
-      "States": [{ "Title": "SPACES", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12, "Image": "state0.png" }],
+      "States": [{ "Title": "MORE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12, "Image": "state0.png" }],
       "UUID": "com.elgato.streamdeck.profile.openchild"
     },
     "2,0": {
@@ -68,13 +68,6 @@
       "Settings": { "command": "split-down" },
       "State": 0,
       "States": [{ "Title": "SPLIT ↓", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
-      "UUID": "com.so1omon563.herdr-control.command"
-    },
-    "0,2": {
-      "Name": "Toggle Sidebar",
-      "Settings": { "command": "sidebar" },
-      "State": 0,
-      "States": [{ "Title": "SIDEBAR", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "1,2": {
