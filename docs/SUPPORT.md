@@ -19,7 +19,7 @@ not evidence that every intermediate version has been tested.
 | Hardware | Bundled profile | Hardware evidence |
 | --- | --- | --- |
 | 15-key Stream Deck (`20GBA9901`) | `HERDR` | The personal plugin profile clean-installed successfully. The personal Open Herdr action was placed on the existing default profile and passed a hardware press test. The full button layout was exercised during prototype iteration, including the T-shaped pane-routing regression now covered by validation. |
-| Stream Deck+ (`20GBD9901`) | `HERDR Plus` | The personal plugin profile clean-installed successfully. Under the personal UUID, the Spaces folder and all four CLI-backed resize directions passed a hardware test with the final titleless directional icons. Buttons, dials, touch feedback, agent browsing, Rename, and Close were exercised during prototype iteration. The full interaction set has not been repeated under the personal UUID. |
+| Stream Deck+ (`20GBD9901`) | `HERDR Plus` | The personal plugin profile clean-installed successfully. Under the personal UUID, the More folder containing Spaces, Resize, Settings, and Sidebar, all four CLI-backed resize directions, and the default-keybinding Settings action passed hardware tests with their final icons. Buttons, dials, touch feedback, agent browsing, Rename, and Close were exercised during prototype iteration. The full interaction set has not been repeated under the personal UUID. |
 | Other Stream Deck models | None | No support claim. Additional device sizes remain untested. |
 
 The model codes above identify the two profile targets used during testing.
@@ -46,5 +46,5 @@ support-matrix pass.
 - Herdr versions other than 0.8.2.
 - Stream Deck software versions before 7.5.0 as physically tested versions.
 - Stream Deck models other than the tested 15-key device and Stream Deck+.
-- Automatic execution of custom Herdr bindings for Spaces, Sidebar, Rename,
-  and Close.
+- Automatic execution of custom Herdr bindings for Spaces, Settings, Sidebar,
+  Rename, and Close.

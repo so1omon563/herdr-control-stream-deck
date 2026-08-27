@@ -12,7 +12,7 @@ Herdr Control brings workspace, tab, pane, and agent navigation from [Herdr](htt
 - Navigate and create workspaces and tabs.
 - Navigate, split, resize, and zoom panes, including mixed horizontal and vertical layouts.
 - Browse and focus agents from a Stream Deck+ dial.
-- Open Herdr-native rename and close interactions.
+- Open Herdr-native Settings, Rename, and Close interactions.
 - Add configurable Herdr Command actions to custom Stream Deck profiles.
 
 ## Requirements
@@ -48,7 +48,7 @@ under `~/Library/Application Support/com.elgato.StreamDeck/Plugins/` in
 
 ## Known limitations
 
-- Spaces, Sidebar, Rename, and Close currently support only Herdr's default keybindings. Herdr Control blocks an affected action when it detects a relevant override instead of sending the wrong default sequence.
+- Spaces, Settings, Sidebar, Rename, and Close currently support only Herdr's default keybindings. Herdr Control blocks an affected action when it detects a relevant override instead of sending the wrong default sequence.
 - The current build and installation process is for development only.
 - Other Stream Deck models have not been tested yet.
 
@@ -56,13 +56,13 @@ under `~/Library/Application Support/com.elgato.StreamDeck/Plugins/` in
 
 Herdr Control reads `HERDR_CONFIG_PATH` or `~/.config/herdr/config.toml` only to detect explicit overrides. It does not parse or execute configured bindings yet. If `keys.prefix` or the affected action field is assigned explicitly, the corresponding Stream Deck action displays `CUSTOM KEYS` and stops.
 
-The affected fields are `keys.workspace_picker`, `keys.toggle_sidebar`, `keys.rename_workspace`, `keys.rename_tab`, `keys.rename_pane`, `keys.close_workspace`, `keys.close_tab`, and `keys.close_pane`. An explicit `keys.prefix` assignment affects all eight. Even an explicit assignment containing the default value is treated as an override until automatic binding support is implemented.
+The affected fields are `keys.workspace_picker`, `keys.settings`, `keys.toggle_sidebar`, `keys.rename_workspace`, `keys.rename_tab`, `keys.rename_pane`, `keys.close_workspace`, `keys.close_tab`, and `keys.close_pane`. An explicit `keys.prefix` assignment affects all nine. Even an explicit assignment containing the default value is treated as an override until automatic binding support is implemented.
 
 Workspace and tab creation and cycling, pane navigation and layout controls, agent focus, Detach, and Back continue to use Herdr CLI or plugin-owned behavior. Native built-in action invocation is being discussed upstream in [herdr#1624](https://github.com/herdrdev/herdr/discussions/1624).
 
 ### First-run macOS permissions
 
-Spaces, Sidebar, Rename, and Close send Herdr key commands through macOS System Events. Enable both of these entries for the Stream Deck app:
+Spaces, Settings, Sidebar, Rename, and Close send Herdr key commands through macOS System Events. Enable both of these entries for the Stream Deck app:
 
 1. **System Settings → Privacy & Security → Accessibility → Elgato Stream Deck**
 2. **System Settings → Privacy & Security → Automation → Elgato Stream Deck → System Events**

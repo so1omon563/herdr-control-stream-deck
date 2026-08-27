@@ -91,6 +91,7 @@ const COMMAND_TITLES = {
   "resize-right": "",
   "resize-up": "",
   "resize-down": "",
+  "settings": "SETTINGS",
   "sidebar": "SIDEBAR",
   "zoom": "ZOOM",
   "pane-left": "PREV\nPANE",
@@ -118,6 +119,7 @@ const COMMAND_IMAGES = {
   "resize-right": "images/resize-right.svg",
   "resize-up": "images/resize-up.svg",
   "resize-down": "images/resize-down.svg",
+  "settings": "images/settings.svg",
   "sidebar": "images/sidebar.svg",
   "zoom": "images/zoom.svg",
   "pane-left": "images/pane-left.svg",
@@ -146,6 +148,7 @@ function errorRestoreTitle(info, originalTitle) {
 }
 
 const HERDR_PREFIX_COMMANDS = {
+  "settings": [1, false],
   "rename-workspace": [13, true],
   "rename-tab": [17, true],
   "rename-pane": [35, true],
@@ -155,6 +158,7 @@ const HERDR_PREFIX_COMMANDS = {
 };
 
 const HERDR_CONFIG_BINDINGS = {
+  "settings": "settings",
   "workspace-picker": "workspace_picker",
   "sidebar": "toggle_sidebar",
   "rename-workspace": "rename_workspace",

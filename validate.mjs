@@ -21,7 +21,7 @@ const icons = [
   "workspace-new.svg", "workspace-picker.svg", "tab-previous.svg", "tab-next.svg",
   "tab-new.svg", "split-right.svg", "split-down.svg", "pane-left.svg",
   "pane-right.svg", "zoom.svg", "resize.svg", "resize-left.svg", "resize-right.svg",
-  "resize-up.svg", "resize-down.svg", "sidebar.svg", "rename.svg", "close.svg", "detach.svg", "back.svg"
+  "resize-up.svg", "resize-down.svg", "settings.svg", "more.svg", "sidebar.svg", "rename.svg", "close.svg", "detach.svg", "back.svg"
 ];
 const dialIcons = ["dial-workspace.svg", "dial-tab.svg", "dial-pane.svg", "dial-agent.svg"];
 
@@ -72,6 +72,9 @@ for (const file of [profile, embeddedProfile]) {
 const standardActions = JSON.parse(readFileSync(profile)).Actions;
 assert.equal(standardActions["1,0"].UUID, "com.elgato.streamdeck.profile.openchild");
 assert.deepEqual(standardActions["1,0"].Settings, { ProfileUUID: "19bb5c24-877c-4bb0-a517-28079c643001" });
+assert.equal(standardActions["1,0"].Name, "More");
+assert.equal(standardActions["1,0"].States[0].Title, "MORE");
+assert.equal(standardActions["0,2"], undefined);
 for (const file of [standardSpacesPage, standardResizePage]) {
   const manifest = JSON.parse(readFileSync(file));
   assert.equal(manifest.Version, "1.0");
@@ -89,10 +92,13 @@ const plusControllers = JSON.parse(readFileSync(plusPage)).Controllers;
 const plusKeys = plusControllers.find(item => item.Type === "Keypad").Actions;
 const plusDials = plusControllers.find(item => item.Type === "Encoder").Actions;
 assert.deepEqual(Object.values(plusKeys).map(item => item.Settings.command ?? (item.UUID === "com.elgato.streamdeck.profile.openchild" ? item.UUID : "back")), [
-  "com.elgato.streamdeck.profile.openchild", "sidebar", "com.elgato.streamdeck.profile.openchild", "com.elgato.streamdeck.profile.openchild",
+  "com.elgato.streamdeck.profile.openchild", "com.elgato.streamdeck.profile.openchild", "com.elgato.streamdeck.profile.openchild",
   "split-right", "split-down", "detach", "back"
 ]);
 assert.deepEqual(plusKeys["0,0"].Settings, { ProfileUUID: "19bb5c24-877c-4bb0-a517-28079c643101" });
+assert.equal(plusKeys["0,0"].Name, "More");
+assert.equal(plusKeys["0,0"].States[0].Title, "MORE");
+assert.equal(plusKeys["1,0"], undefined);
 assert.deepEqual(plusKeys["2,0"].Settings, { ProfileUUID: "6b2c84e0-ad9c-4d13-98e6-5b8fd2b3c401" });
 assert.deepEqual(plusKeys["3,0"].Settings, { ProfileUUID: "3fd8b9a7-1976-4e21-bb12-a1f27947d502" });
 assert.ok(existsSync(join(plusPage, "../Images/rename.png")));
@@ -113,12 +119,15 @@ for (const [file, childProfile] of [
   [standardSpacesPage, "19bb5c24-877c-4bb0-a517-28079c643002"],
   [plusSpacesPage, "19bb5c24-877c-4bb0-a517-28079c643102"]
 ]) {
+  assert.equal(JSON.parse(readFileSync(file)).Name, "More");
   const actions = keypadActions(file);
   assert.deepEqual(Object.values(actions).map(item => item.Settings?.command ?? (item.UUID === "com.elgato.streamdeck.profile.openchild" ? item.UUID : "back")), [
-    "back", "workspace-picker", "com.elgato.streamdeck.profile.openchild"
+    "back", "workspace-picker", "com.elgato.streamdeck.profile.openchild", "settings", "sidebar"
   ]);
   assert.deepEqual(Object.values(actions)[2].Settings, { ProfileUUID: childProfile });
 }
+assert.equal(keypadActions(standardSpacesPage)["4,0"].Settings.command, "sidebar");
+assert.equal(keypadActions(plusSpacesPage)["0,1"].Settings.command, "sidebar");
 for (const file of [standardResizePage, plusResizePage]) {
   const actions = keypadActions(file);
   assert.deepEqual(Object.values(actions).map(item => item.Settings?.command ?? "back"), [
@@ -131,7 +140,7 @@ for (const file of [standardResizePage, plusResizePage]) {
 for (const file of [
   join(root, "profile/2F9C9B72-92B4-4EC1-AB64-BFC50ED6CFD8.sdProfile/1,0/CustomImages/state0.png"),
   join(root, "profile/2F9C9B72-92B4-4EC1-AB64-BFC50ED6CFD8.sdProfile/Profiles/19BB5C24-877C-4BB0-A517-28079C643001.sdProfile/2,0/CustomImages/state0.png"),
-  join(root, "profile-plus/C7A1F520-4F17-4D6E-8B87-9077A0D2F9C1.sdProfile/Profiles/A2E7C5F3-B9D4-4E1F-8C63-10B6A98D7420/Images/workspace-picker.png"),
+  join(root, "profile-plus/C7A1F520-4F17-4D6E-8B87-9077A0D2F9C1.sdProfile/Profiles/A2E7C5F3-B9D4-4E1F-8C63-10B6A98D7420/Images/more.png"),
   join(root, "profile-plus/C7A1F520-4F17-4D6E-8B87-9077A0D2F9C1.sdProfile/Profiles/19BB5C24-877C-4BB0-A517-28079C643101/Images/resize.png")
 ]) assert.ok(existsSync(file), `missing profile image ${file}`);
 assert.deepEqual(Object.values(plusDials).map(item => item.Settings.dial), ["workspace", "tabs", "panes", "client"]);
@@ -160,7 +169,7 @@ for (const icon of [
   "workspace-previous.svg", "workspace-next.svg", "workspace-new.svg", "workspace-picker.svg",
   "tab-previous.svg", "tab-next.svg", "tab-new.svg", "split-right.svg", "split-down.svg",
   "pane-left.svg", "pane-right.svg", "zoom.svg", "resize-left.svg", "resize-right.svg",
-  "resize-up.svg", "resize-down.svg", "sidebar.svg", "rename.svg", "close.svg", "detach.svg"
+  "resize-up.svg", "resize-down.svg", "settings.svg", "sidebar.svg", "rename.svg", "close.svg", "detach.svg"
 ]) assert.ok(source.includes(`images/${icon}`), `unmapped ${icon}`);
 for (const event of ["dialRotate", "dialUp", "touchTap"]) assert.ok(source.includes(event), `missing ${event}`);
 for (const icon of dialIcons) assert.ok(source.includes(`images/${icon}`), `unmapped ${icon}`);
@@ -176,7 +185,7 @@ assert.deepEqual([...commandSelect.matchAll(/<option value="([^"]+)">/g)].map(ma
   "tab-next", "tab-prev", "tab-new",
   "pane-right", "pane-left", "split-right", "split-down",
   "resize-left", "resize-right", "resize-up", "resize-down", "zoom",
-  "sidebar", "detach",
+  "settings", "sidebar", "detach",
   "rename-workspace", "rename-tab", "rename-pane",
   "close-workspace", "close-tab", "close-pane"
 ]);
@@ -236,8 +245,10 @@ assert.deepEqual(prefixCommand("rename-pane"), [35, true]);
 assert.deepEqual(prefixCommand("close-workspace"), [2, true]);
 assert.deepEqual(prefixCommand("close-tab"), [7, true]);
 assert.deepEqual(prefixCommand("close-pane"), [7, false]);
+assert.deepEqual(prefixCommand("settings"), [1, false]);
 assert.equal(prefixCommand("rename"), null);
 const affectedBindings = {
+  "settings": "settings",
   "workspace-picker": "workspace_picker",
   "sidebar": "toggle_sidebar",
   "rename-workspace": "rename_workspace",
