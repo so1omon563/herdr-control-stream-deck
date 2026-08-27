@@ -1,4 +1,5 @@
 {
+  "Controllers": [{
   "Actions": {
     "0,0": {
       "Name": "Parent Folder",
@@ -18,7 +19,7 @@
       "Name": "Resize",
       "Settings": { "ProfileUUID": "19bb5c24-877c-4bb0-a517-28079c643002" },
       "State": 0,
-      "States": [{ "Title": "RESIZE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12, "Image": "state0.png" }],
+      "States": [{ "Title": "RESIZE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12, "Image": "Images/resize.png" }],
       "UUID": "com.elgato.streamdeck.profile.openchild"
     },
     "3,0": {
@@ -36,7 +37,8 @@
       "UUID": "com.so1omon563.herdr-control.command"
     }
   },
-  "DeviceModel": "20GBA9901",
-  "Name": "More",
-  "Version": "1.0"
+  "Type": "Keypad"
+  }],
+  "Icon": "",
+  "Name": "More"
 }

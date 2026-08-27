@@ -11,7 +11,8 @@ Herdr Control brings workspace, tab, pane, and agent navigation from [Herdr](htt
 - Automatically switch to dedicated 15-key Stream Deck and Stream Deck+ profiles.
 - Navigate and create workspaces and tabs.
 - Navigate, split, resize, and zoom panes, including mixed horizontal and vertical layouts.
-- Browse and focus agents from a Stream Deck+ dial.
+- Browse and focus agents from a dedicated folder on both bundled profiles or
+  from the Stream Deck+ dial.
 - Open Herdr-native Settings, Rename, and Close interactions.
 - Add configurable Herdr Command actions to custom Stream Deck profiles.
 

@@ -22,10 +22,11 @@ npm test
 npm run validate:streamdeck
 ```
 
-The repository validation checks manifests, profile layouts, icons, dial
-behavior, command mappings, and the pane-routing regressions found during
-hardware testing. The Stream Deck validation runs the official CLI against the
-personal plugin UUID without updating its validation schemas during the run.
+The repository validation checks manifests, profile layouts, icons, agent
+folder pagination and status presentation, dial behavior, command mappings,
+and the pane-routing regressions found during hardware testing. The Stream Deck
+validation runs the official CLI against the personal plugin UUID without
+updating its validation schemas during the run.
 
 ## Profiles
 
@@ -58,10 +59,20 @@ The personal package was clean-installed with Stream Deck 7.5.0 (22885) on a
 Both bundled profiles installed for their intended devices, and the existing
 default profiles remained intact.
 
-This test exposed an unsupported `1.1` profile format version in the 15-key
-archive. Stream Deck logged the import as corrupted and rejected it. The
-15-key source now uses the supported `1.0` format, matching Elgato's bundled
-15-key profiles, and the rebuilt archive imports successfully.
+An early clean-install test exposed an unsupported `1.1` profile format in the
+15-key archive. Later testing found that a legacy `1.0` archive with nested
+`.sdProfile` child bundles caused the predefined-profile installer to loop,
+while removing only those suffixes caused Stream Deck to discard the child
+folders as orphans. Both bundled profiles now use the modern `3.0` structure:
+one outer profile bundle, a root page, and plain UUID child-page directories.
+The repository validation checks both archive roots and rejects nested child
+profile bundles before packaging.
+
+The 15-key v3 profile clean-installed with its More, Resize, and Agents folder
+tree intact. Hardware testing displayed and focused six live agents in its
+ten-slot folder. Stream Deck+ testing covered empty, two-agent, and six-agent
+states, including four-slot pagination across two pages. Unused navigation and
+agent slots render black so the physical keys appear off.
 
 A hardware smoke test placed `com.so1omon563.herdr-control.toggle` on the
 existing 15-key default profile and confirmed that pressing it opens Herdr and

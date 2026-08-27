@@ -9,6 +9,13 @@
           "States": [{ "Title": "MORE", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12, "Image": "Images/more.png" }],
           "UUID": "com.elgato.streamdeck.profile.openchild"
         },
+        "1,0": {
+          "Name": "Agents",
+          "Settings": { "ProfileUUID": "8a44c2e0-f4a6-4bd1-a9d8-36a4d39e3101" },
+          "State": 0,
+          "States": [{ "Title": "AGENTS", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12, "Image": "Images/agents.png" }],
+          "UUID": "com.elgato.streamdeck.profile.openchild"
+        },
         "2,0": {
           "Name": "Rename",
           "Settings": { "ProfileUUID": "6b2c84e0-ad9c-4d13-98e6-5b8fd2b3c401" },

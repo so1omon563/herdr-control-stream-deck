@@ -8,7 +8,7 @@ not evidence that every intermediate version has been tested.
 
 | Component | Declared boundary | Verified environment | Evidence boundary |
 | --- | --- | --- | --- |
-| macOS | 13 or later | 26.5.2 (25F84), Apple silicon | The manifest declares macOS 13. Intel Macs and macOS 13 through 25 have not been hardware-tested. |
+| macOS | 13 or later | 26.5.2 (25F84) and 27.0 public beta (26A5421a), Apple silicon | The manifest declares macOS 13. Intel Macs and macOS 13 through 25 have not been hardware-tested. The agent-folder pass used the macOS 27 public beta. |
 | Stream Deck | 6.6 or later | 7.5.0 (22885) | The manifest declares 6.6. Versions before 7.5.0 have not been exercised during the personal-plugin clean install. |
 | Herdr | 0.8.2 | 0.8.2 | This is the only Herdr version covered by the current CLI, socket-schema, keybinding, and hardware evidence. |
 | Node.js runtime | A compatible runtime must be available from Homebrew, `/usr/local`, `PATH`, or Stream Deck | 20.20.0, 22.22.3, and 24.13.1 | The full validation suite passes on all three exact versions. Development tooling requires Node.js 20.1 or later. |
@@ -18,8 +18,8 @@ not evidence that every intermediate version has been tested.
 
 | Hardware | Bundled profile | Hardware evidence |
 | --- | --- | --- |
-| 15-key Stream Deck (`20GBA9901`) | `HERDR` | The personal plugin profile clean-installed successfully. The personal Open Herdr action was placed on the existing default profile and passed a hardware press test. The full button layout was exercised during prototype iteration, including the T-shaped pane-routing regression now covered by validation. |
-| Stream Deck+ (`20GBD9901`) | `HERDR Plus` | The personal plugin profile clean-installed successfully. Under the personal UUID, the More folder containing Spaces, Resize, Settings, and Sidebar, all four CLI-backed resize directions, and the default-keybinding Settings action passed hardware tests with their final icons. Buttons, dials, touch feedback, agent browsing, Rename, and Close were exercised during prototype iteration. The full interaction set has not been repeated under the personal UUID. |
+| 15-key Stream Deck (`20GBA9901`) | `HERDR` | The personal v3 profile clean-installed from the plugin with its More, Resize, and Agents folder tree intact. The revised three-row root layout was visually accepted. Six live agents displayed in the ten-slot Agents folder, agent keys focused the correct panes, pagination stayed hidden when unnecessary, and unused keys rendered fully off. More than ten agents remains automation-tested rather than hardware-tested. The personal Open Herdr action also passed a hardware press test on the existing default profile. |
+| Stream Deck+ (`20GBD9901`) | `HERDR Plus` | The personal plugin profile clean-installed successfully. The More folder, all four resize directions, Settings, and Sidebar passed hardware tests with their final icons. The Agents folder passed empty, two-agent, and six-agent tests; four-slot pagination displayed pages `1/2` and `2/2`, navigation worked, agent keys focused the correct panes, and unused controls rendered fully off. The agent dial continued to report and focus the selected agent. Rename and Close retain prototype hardware coverage. |
 | Other Stream Deck models | None | No support claim. Additional device sizes remain untested. |
 
 The model codes above identify the two profile targets used during testing.
