@@ -88,6 +88,7 @@ const COMMAND_TITLES = {
   "tab-next": "NEXT\nTAB",
   "split-right": "SPLIT\n→",
   "split-down": "SPLIT\n↓",
+  "pane-primary": "PANE",
   "resize-left": "",
   "resize-right": "",
   "resize-up": "",
@@ -116,6 +117,7 @@ const COMMAND_IMAGES = {
   "tab-next": "images/tab-next.svg",
   "split-right": "images/split-right.svg",
   "split-down": "images/split-down.svg",
+  "pane-primary": "images/zoom.svg",
   "resize-left": "images/resize-left.svg",
   "resize-right": "images/resize-right.svg",
   "resize-up": "images/resize-up.svg",
@@ -139,13 +141,31 @@ function commandSettings(settings = {}) {
   return { ...current, command: commandForSettings(current) };
 }
 
-function commandPresentation(settings = {}) {
+function normalizeSplitDirection(settings = {}) {
+  return settings?.splitDirection === "down" ? "down" : "right";
+}
+
+function panePrimaryCommand(state, settings = {}) {
+  const panes = state?.panes?.filter(item => item.tab_id === state.focused_tab_id) ?? [];
+  if (!state?.focused_pane_id || !panes.some(item => item.pane_id === state.focused_pane_id)) return null;
+  return panes.length > 1 ? "zoom" : `split-${normalizeSplitDirection(settings)}`;
+}
+
+function commandPresentation(settings = {}, state) {
   const command = commandForSettings(settings);
+  if (command === "pane-primary") {
+    const resolved = panePrimaryCommand(state, settings);
+    return {
+      command,
+      title: resolved?.startsWith("split-") ? "SPLIT" : resolved ? COMMAND_TITLES[resolved] : COMMAND_TITLES[command],
+      image: resolved ? COMMAND_IMAGES[resolved] : COMMAND_IMAGES[command]
+    };
+  }
   return { command, title: COMMAND_TITLES[command], image: COMMAND_IMAGES[command] };
 }
 
 function errorRestoreTitle(info, originalTitle) {
-  return info?.action === COMMAND_UUID ? commandPresentation(info.settings).title : originalTitle;
+  return info?.action === COMMAND_UUID ? (info.commandTitle ?? commandPresentation(info.settings).title) : originalTitle;
 }
 
 const HERDR_PREFIX_COMMANDS = {
@@ -787,7 +807,7 @@ async function cyclePane(command, state) {
   throw new Error(`Could not focus HERDR pane ${target.pane_id}`);
 }
 
-async function executeCommand(command) {
+async function executeCommand(command, settings = {}) {
   const overriddenBinding = activeBindingOverride(command);
   if (overriddenBinding) {
     const error = new Error(`HERDR keybinding ${overriddenBinding} is explicitly configured`);
@@ -804,6 +824,12 @@ async function executeCommand(command) {
     return detach(client);
   }
 
+  if (command === "pane-primary") {
+    const state = await snapshot();
+    const resolved = panePrimaryCommand(state, settings);
+    if (!resolved) throw new Error("No focused HERDR pane");
+    return run(herdrExecutable(), paneCommandArgs(resolved, state.focused_pane_id));
+  }
   if (["split-right", "split-down", "resize-left", "resize-right", "resize-up", "resize-down", "zoom"].includes(command)) {
     const state = await snapshot();
     return run(herdrExecutable(), paneCommandArgs(command, state.focused_pane_id));
@@ -862,7 +888,7 @@ function encoderCommand(dial, event, payload = {}) {
     return {
       workspace: "workspace-new",
       tabs: "tab-new",
-      panes: "zoom"
+      panes: "pane-primary"
     }[dial] ?? null;
   }
   return null;
@@ -878,6 +904,7 @@ const knownDevices = new Set(devicesAtLaunch.map(device => device.id));
 const deviceTypes = new Map(devicesAtLaunch.map(device => [device.id, device.type]));
 const herdrProfileDevices = new Set();
 const encoderBusy = new Set();
+const adaptivePaneKeyBusy = new Set();
 const agentSelections = new Map();
 const agentPages = new Map();
 let busy = false;
@@ -906,13 +933,22 @@ function setSettings(context, settings) {
   send({ event: "setSettings", context, payload: settings });
 }
 
+function setCommandPresentation(context, presentation) {
+  const info = contextInfo.get(context);
+  if (!info) return;
+  const signature = `${presentation.title}\n${presentation.image}`;
+  if (info.commandPresentation === signature) return;
+  info.commandPresentation = signature;
+  info.commandTitle = presentation.title;
+  setTitle(context, presentation.title);
+  setImage(context, presentation.image);
+}
+
 function syncCommand(context, settings, persistDefault = false) {
   const normalized = commandSettings(settings);
   const info = contextInfo.get(context);
   if (info) info.settings = normalized;
-  const presentation = commandPresentation(normalized);
-  setTitle(context, presentation.title);
-  setImage(context, presentation.image);
+  setCommandPresentation(context, commandPresentation(normalized));
   if (persistDefault && settings?.command !== normalized.command) setSettings(context, normalized);
   return normalized.command;
 }
@@ -1012,7 +1048,7 @@ async function refresh(force = false) {
   return attachedState;
 }
 
-function encoderFeedback(dial, state, selectedAgentPaneId) {
+function encoderFeedback(dial, state, selectedAgentPaneId, settings = {}) {
   if (dial === "workspace") {
     const workspace = state?.workspaces?.find(item => item.workspace_id === state.focused_workspace_id);
     return {
@@ -1034,11 +1070,15 @@ function encoderFeedback(dial, state, selectedAgentPaneId) {
   if (dial === "panes") {
     const panes = state?.panes?.filter(item => item.tab_id === state.focused_tab_id) ?? [];
     const pane = panes.findIndex(item => item.pane_id === state?.focused_pane_id);
+    const primary = panePrimaryCommand(state, settings);
+    const pushHint = primary === "zoom"
+      ? "PUSH ZOOM"
+      : primary === "split-down" ? "PUSH SPLIT ↓" : primary === "split-right" ? "PUSH SPLIT →" : "NO PANE";
     return {
       glyph: "images/dial-pane.svg",
       label: "PANES",
       value: panes[pane]?.label?.trim() || (pane >= 0 ? `PANE ${pane + 1}` : "NO PANE"),
-      hint: "TURN CYCLE    PUSH ZOOM"
+      hint: `TURN CYCLE    ${pushHint}`
     };
   }
   const agents = state?.agents ?? [];
@@ -1064,7 +1104,17 @@ async function refreshEncoderFeedbacks(state) {
   for (const [context, info] of encoders) {
     const selected = info.settings.dial === "client" ? selectAgent(state, agentSelections.get(context)) : null;
     if (selected) agentSelections.set(context, selected.pane_id);
-    setFeedback(context, encoderFeedback(info.settings.dial, state, selected?.pane_id));
+    setFeedback(context, encoderFeedback(info.settings.dial, state, selected?.pane_id, info.settings));
+  }
+}
+
+function refreshAdaptivePaneKeys(state) {
+  if (!state) return;
+  const contexts = [...contextInfo.entries()].filter(([, info]) => (
+    info.action === COMMAND_UUID && commandForSettings(info.settings) === "pane-primary"
+  ));
+  for (const [context, info] of contexts) {
+    setCommandPresentation(context, commandPresentation(info.settings, state));
   }
 }
 
@@ -1093,12 +1143,17 @@ function refreshAgentKeys(state) {
 async function refreshLiveFeedbacks() {
   if (liveRefreshPromise) return liveRefreshPromise;
   liveRefreshPromise = (async () => {
-    const hasLiveControls = [...contextInfo.values()].some(info => info.action === ENCODER_UUID || info.action === AGENT_UUID);
+    const hasLiveControls = [...contextInfo.values()].some(info => (
+      info.action === ENCODER_UUID
+      || info.action === AGENT_UUID
+      || (info.action === COMMAND_UUID && commandForSettings(info.settings) === "pane-primary")
+    ));
     if (!hasLiveControls) return;
     let state;
     try {
       state = await snapshot();
     } catch {}
+    refreshAdaptivePaneKeys(state);
     await refreshEncoderFeedbacks(state);
     refreshAgentKeys(state);
   })();
@@ -1127,14 +1182,27 @@ async function toggle(context) {
   }
 }
 
-async function runCommand(context, command, acknowledge = true) {
+async function runCommand(context, command, acknowledge = true, settings = contextInfo.get(context)?.settings ?? {}) {
   if (!command) return showAlert(context);
   try {
-    const result = await executeCommand(command);
+    const result = await executeCommand(command, settings);
     if (acknowledge && result !== false) showOk(context);
     await refreshLiveFeedbacks();
   } catch (error) {
     showError(context, error, COMMAND_TITLES[command] ?? "HERDR");
+  }
+}
+
+async function runCommandKey(context, rawSettings) {
+  const settings = rawSettings ?? contextInfo.get(context)?.settings;
+  const command = commandForSettings(settings);
+  if (command !== "pane-primary") return runCommand(context, command, true, settings);
+  if (adaptivePaneKeyBusy.has(context)) return;
+  adaptivePaneKeyBusy.add(context);
+  try {
+    await runCommand(context, command, true, settings);
+  } finally {
+    adaptivePaneKeyBusy.delete(context);
   }
 }
 
@@ -1202,7 +1270,7 @@ async function runEncoder(context, dial, event, payload) {
   encoderBusy.add(context);
   try {
     if (command === "back") await returnToPreviousProfile(context);
-    else await runCommand(context, command, false);
+    else await runCommand(context, command, false, payload?.settings ?? contextInfo.get(context)?.settings);
   } finally {
     encoderBusy.delete(context);
   }
@@ -1261,7 +1329,9 @@ function connectPlugin() {
       });
       if (message.action === TOGGLE_UUID) toggleContexts.add(message.context);
       if (message.action === COMMAND_UUID) {
-        syncCommand(message.context, settings, true);
+        if (syncCommand(message.context, settings, true) === "pane-primary") {
+          refreshLiveFeedbacks().catch(() => showAlert(message.context));
+        }
       } else if (message.action === BACK_UUID) {
         setTitle(message.context, "BACK");
       } else if (message.action === ENCODER_UUID) {
@@ -1276,11 +1346,17 @@ function connectPlugin() {
       toggleContexts.delete(message.context);
       agentSelections.delete(message.context);
     } else if (message.event === "didReceiveSettings" && message.action === COMMAND_UUID) {
-      syncCommand(message.context, message.payload?.settings ?? {}, true);
+      if (syncCommand(message.context, message.payload?.settings ?? {}, true) === "pane-primary") {
+        refreshLiveFeedbacks().catch(() => showAlert(message.context));
+      }
+    } else if (message.event === "didReceiveSettings" && message.action === ENCODER_UUID) {
+      const info = contextInfo.get(message.context);
+      if (info) info.settings = message.payload?.settings ?? {};
+      refreshLiveFeedbacks().catch(() => showAlert(message.context));
     } else if (message.event === "keyUp") {
       if (message.action === TOGGLE_UUID) toggle(message.context);
       else if (message.action === COMMAND_UUID) {
-        runCommand(message.context, commandForSettings(message.payload?.settings ?? contextInfo.get(message.context)?.settings));
+        runCommandKey(message.context, message.payload?.settings);
       }
       else if (message.action === BACK_UUID) returnToPreviousProfile(message.context);
       else if (message.action === AGENT_UUID) {
@@ -1293,5 +1369,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds };
+module.exports = { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, prefixCommand, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds };
 if (require.main === module) connectPlugin();

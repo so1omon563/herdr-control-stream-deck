@@ -79,7 +79,7 @@
         },
         "2,0": {
           "Name": "Panes",
-          "Settings": { "dial": "panes" },
+          "Settings": { "dial": "panes", "splitDirection": "right" },
           "State": 0,
           "States": [{ "Title": "PANE" }],
           "UUID": "com.so1omon563.herdr-control.encoder"

@@ -49,6 +49,7 @@
         <option value="resize-right">Resize Right</option>
         <option value="resize-up">Resize Up</option>
         <option value="resize-down">Resize Down</option>
+        <option value="pane-primary">Adaptive Pane (Split or Zoom)</option>
         <option value="zoom">Toggle Zoom</option>
       </optgroup>
       <optgroup label="Session">
@@ -69,16 +70,53 @@
     </select>
     <p>The key title and icon follow the selected command automatically.</p>
   </section>
+  <section id="pane-settings" hidden>
+    <label for="split-direction">When the tab has one pane</label>
+    <select id="split-direction">
+      <option value="right">Side by side (Split Right)</option>
+      <option value="down">Stacked (Split Down)</option>
+    </select>
+    <p>With multiple panes, pressing the control toggles zoom instead.</p>
+  </section>
   <script>
     const COMMAND_UUID = "com.so1omon563.herdr-control.command";
+    const ENCODER_UUID = "com.so1omon563.herdr-control.encoder";
     let socket;
     let context;
     let action;
     let settings = {};
     const terminal = document.getElementById("terminal");
     const command = document.getElementById("command");
+    const splitDirection = document.getElementById("split-direction");
     const terminalSettings = document.getElementById("terminal-settings");
     const commandSettings = document.getElementById("command-settings");
+    const paneSettings = document.getElementById("pane-settings");
+
+    const setActionSettings = patch => {
+      settings = { ...settings, ...patch };
+      socket?.send(JSON.stringify({
+        event: "setSettings",
+        action,
+        context,
+        payload: settings
+      }));
+    };
+
+    const renderSettings = () => {
+      terminalSettings.hidden = true;
+      commandSettings.hidden = true;
+      paneSettings.hidden = true;
+      splitDirection.value = settings.splitDirection === "down" ? "down" : "right";
+      if (action === COMMAND_UUID) {
+        command.value = settings.command ?? "workspace-next";
+        commandSettings.hidden = false;
+        paneSettings.hidden = command.value !== "pane-primary";
+      } else if (action === ENCODER_UUID) {
+        paneSettings.hidden = settings.dial !== "panes";
+      } else {
+        terminalSettings.hidden = false;
+      }
+    };
 
     terminal.addEventListener("change", () => {
       socket?.send(JSON.stringify({
@@ -89,13 +127,12 @@
     });
 
     command.addEventListener("change", () => {
-      settings = { ...settings, command: command.value };
-      socket?.send(JSON.stringify({
-        event: "setSettings",
-        action,
-        context,
-        payload: settings
-      }));
+      setActionSettings({ command: command.value });
+      renderSettings();
+    });
+
+    splitDirection.addEventListener("change", () => {
+      setActionSettings({ splitDirection: splitDirection.value });
     });
 
     window.connectElgatoStreamDeckSocket = (port, uuid, registerEvent, _info, actionInfoJson) => {
@@ -103,16 +140,11 @@
       context = uuid;
       action = actionInfo.action;
       settings = actionInfo.payload?.settings ?? {};
-      if (action === COMMAND_UUID) {
-        command.value = settings.command ?? "workspace-next";
-        commandSettings.hidden = false;
-      } else {
-        terminalSettings.hidden = false;
-      }
+      renderSettings();
       socket = new WebSocket(`ws://127.0.0.1:${port}`);
       socket.addEventListener("open", () => {
         socket.send(JSON.stringify({ event: registerEvent, uuid }));
-        if (action !== COMMAND_UUID) {
+        if (action !== COMMAND_UUID && action !== ENCODER_UUID) {
           socket.send(JSON.stringify({ event: "getGlobalSettings", context }));
         }
         document.body.classList.add("ready");
@@ -123,7 +155,7 @@
           terminal.value = message.payload?.settings?.terminal ?? "auto";
         } else if (message.event === "didReceiveSettings") {
           settings = message.payload?.settings ?? {};
-          command.value = settings.command ?? "workspace-next";
+          renderSettings();
         }
       });
     };

@@ -66,6 +66,7 @@
       },
       "Icon": "images/command",
       "Name": "HERDR Dial",
+      "PropertyInspectorPath": "property-inspector.html",
       "States": [
         {
           "Image": "images/command"

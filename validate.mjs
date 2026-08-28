@@ -67,6 +67,7 @@ for (const [name, bundle, model] of [
 const encoderAction = pluginManifest.Actions.find(item => item.UUID === "com.so1omon563.herdr-control.encoder");
 assert.deepEqual(encoderAction.Controllers, ["Encoder"]);
 assert.equal(encoderAction.Encoder.layout, "layouts/herdr-dial.json");
+assert.equal(encoderAction.PropertyInspectorPath, "property-inspector.html");
 const dialLayout = JSON.parse(readFileSync(join(plugin, encoderAction.Encoder.layout)));
 assert.deepEqual(dialLayout.items.map(item => item.key), ["glyph", "label", "value", "hint"]);
 for (const item of dialLayout.items) {
@@ -115,7 +116,9 @@ assert.deepEqual([
   standardActions["2,2"].Settings.command,
   standardActions["3,2"].Settings.command,
   standardActions["4,2"].UUID
-], ["pane-left", "pane-right", "zoom", "detach", "com.so1omon563.herdr-control.back"]);
+], ["pane-left", "pane-right", "pane-primary", "detach", "com.so1omon563.herdr-control.back"]);
+assert.deepEqual(standardActions["2,2"].Settings, { command: "pane-primary", splitDirection: "right" });
+assert.equal(standardActions["2,2"].States[0].Title, "");
 for (const file of [standardSpacesPage, standardResizePage]) {
   for (const action of Object.values(keypadActions(file)).filter(item => item.States[0].Title)) {
     assert.equal(action.States[0].FontSize, 12);
@@ -197,6 +200,7 @@ for (const file of [
   join(root, "profile-plus/C7A1F520-4F17-4D6E-8B87-9077A0D2F9C1.sdProfile/Profiles/19BB5C24-877C-4BB0-A517-28079C643101/Images/resize.png")
 ]) assert.ok(existsSync(file), `missing profile image ${file}`);
 assert.deepEqual(Object.values(plusDials).map(item => item.Settings.dial), ["workspace", "tabs", "panes", "client"]);
+assert.deepEqual(plusDials["2,0"].Settings, { dial: "panes", splitDirection: "right" });
 for (const action of Object.values(plusKeys)) assert.equal(action.States[0].FontSize, 12);
 for (const icon of icons) {
   const file = join(plugin, "images", icon);
@@ -241,23 +245,60 @@ assert.deepEqual([...commandSelect.matchAll(/<option value="([^"]+)">/g)].map(ma
   "workspace-next", "workspace-prev", "workspace-new", "workspace-picker",
   "tab-next", "tab-prev", "tab-new",
   "pane-right", "pane-left", "split-right", "split-down",
-  "resize-left", "resize-right", "resize-up", "resize-down", "zoom",
+  "resize-left", "resize-right", "resize-up", "resize-down", "pane-primary", "zoom",
   "settings", "sidebar", "detach",
   "rename-workspace", "rename-tab", "rename-pane",
   "close-workspace", "close-tab", "close-pane"
 ]);
 assert.match(inspector, /event:\s*"setSettings"/);
 assert.match(inspector, /action,\s*context,\s*payload: settings/);
+assert.match(inspector, /Side by side \(Split Right\)/);
+assert.match(inspector, /Stacked \(Split Down\)/);
+assert.match(inspector, /action === ENCODER_UUID/);
 
-const { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
+const { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, prefixCommand, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
 assert.equal(commandForSettings({}), "workspace-next");
 assert.equal(commandForSettings({ command: "unsupported" }), "workspace-next");
+assert.equal(commandForSettings({ command: "pane-primary" }), "pane-primary");
 assert.deepEqual(commandSettings({ custom: true }), { custom: true, command: "workspace-next" });
 assert.deepEqual(commandSettings({ command: "tab-next", custom: true }), { command: "tab-next", custom: true });
 assert.deepEqual(commandPresentation({ command: "split-right" }), {
   command: "split-right",
   title: "SPLIT\n→",
   image: "images/split-right.svg"
+});
+const singlePaneState = {
+  focused_tab_id: "t1",
+  focused_pane_id: "p1",
+  panes: [{ pane_id: "p1", tab_id: "t1", label: "shell" }]
+};
+const multiplePaneState = {
+  ...singlePaneState,
+  panes: [...singlePaneState.panes, { pane_id: "p2", tab_id: "t1", label: "logs" }]
+};
+assert.equal(normalizeSplitDirection({}), "right");
+assert.equal(normalizeSplitDirection({ splitDirection: "down" }), "down");
+assert.equal(normalizeSplitDirection({ splitDirection: "unsupported" }), "right");
+assert.equal(panePrimaryCommand(singlePaneState), "split-right");
+assert.equal(panePrimaryCommand(singlePaneState, { splitDirection: "down" }), "split-down");
+assert.equal(panePrimaryCommand(multiplePaneState, { splitDirection: "down" }), "zoom");
+assert.equal(panePrimaryCommand({ ...singlePaneState, focused_pane_id: "missing" }), null);
+assert.equal(panePrimaryCommand({ ...singlePaneState, focused_pane_id: null }), null);
+assert.equal(panePrimaryCommand({ ...singlePaneState, panes: [{ pane_id: "p1", tab_id: "t2" }] }), null);
+assert.deepEqual(commandPresentation({ command: "pane-primary" }), {
+  command: "pane-primary",
+  title: "PANE",
+  image: "images/zoom.svg"
+});
+assert.deepEqual(commandPresentation({ command: "pane-primary", splitDirection: "down" }, singlePaneState), {
+  command: "pane-primary",
+  title: "SPLIT",
+  image: "images/split-down.svg"
+});
+assert.deepEqual(commandPresentation({ command: "pane-primary", splitDirection: "down" }, multiplePaneState), {
+  command: "pane-primary",
+  title: "ZOOM",
+  image: "images/zoom.svg"
 });
 assert.deepEqual(commandPresentation({ command: "resize-up" }), {
   command: "resize-up",
@@ -267,7 +308,8 @@ assert.deepEqual(commandPresentation({ command: "resize-up" }), {
 assert.equal(errorRestoreTitle({ action: "com.so1omon563.herdr-control.command", settings: { command: "tab-next" } }, "NEXT\nSPACE"), "NEXT\nTAB");
 assert.equal(errorRestoreTitle({ action: "com.so1omon563.herdr-control.toggle" }, undefined), undefined);
 assert.ok(source.includes("syncCommand(message.context, settings, true)"));
-assert.ok(source.includes("runCommand(message.context, commandForSettings("));
+assert.match(source, /async function runCommandKey[\s\S]*?command !== "pane-primary"[\s\S]*?adaptivePaneKeyBusy\.has\(context\)[\s\S]*?adaptivePaneKeyBusy\.add\(context\)[\s\S]*?finally[\s\S]*?adaptivePaneKeyBusy\.delete\(context\)/);
+assert.ok(source.includes("runCommandKey(message.context, message.payload?.settings)"));
 assert.throws(() => herdrExecutable([]), /HERDR executable not found in a supported install location/);
 await assert.rejects(terminalForLaunch("kitty", () => false), /kitty is not installed/);
 await assert.rejects(terminalForLaunch("auto", () => false), /No supported terminal is installed/);
@@ -285,7 +327,7 @@ assert.deepEqual(terminalIds("auto"), ["ghostty", "kitty", "iterm", "terminal"])
 assert.equal(encoderCommand("workspace", "dialRotate", { ticks: -1 }), "workspace-prev");
 assert.equal(encoderCommand("workspace", "dialUp"), "workspace-new");
 assert.equal(encoderCommand("tabs", "dialRotate", { ticks: 1 }), "tab-next");
-assert.equal(encoderCommand("panes", "dialUp"), "zoom");
+assert.equal(encoderCommand("panes", "dialUp"), "pane-primary");
 assert.equal(encoderCommand("client", "dialRotate", { ticks: 1 }), null);
 assert.equal(encoderCommand("client", "dialUp"), null);
 assert.equal(encoderCommand("client", "touchTap", { hold: true }), null);
@@ -349,6 +391,10 @@ assert.deepEqual(paneRouteDirections(tPanes[2], tPanes[0]), ["left", "up"]);
 assert.equal(encoderFeedback("tabs", { focused_tab_id: "t5", tabs: [{ tab_id: "t5", number: 5, label: "1" }] }).value, "1");
 assert.equal(encoderFeedback("workspace", { focused_workspace_id: "w1", workspaces: [{ workspace_id: "w1", number: 1, label: "api" }] }).value, "api");
 assert.equal(encoderFeedback("panes", { focused_tab_id: "t1", focused_pane_id: "p2", panes: [{ pane_id: "p2", tab_id: "t1", label: "logs" }] }).value, "logs");
+assert.equal(encoderFeedback("panes", singlePaneState).hint, "TURN CYCLE    PUSH SPLIT →");
+assert.equal(encoderFeedback("panes", singlePaneState, undefined, { splitDirection: "down" }).hint, "TURN CYCLE    PUSH SPLIT ↓");
+assert.equal(encoderFeedback("panes", multiplePaneState, undefined, { splitDirection: "down" }).hint, "TURN CYCLE    PUSH ZOOM");
+assert.equal(encoderFeedback("panes", { focused_tab_id: "t1", panes: [] }).hint, "TURN CYCLE    NO PANE");
 const agentState = {
   focused_pane_id: "p2",
   workspaces: [{ workspace_id: "w1", number: 1, label: "Developer" }],

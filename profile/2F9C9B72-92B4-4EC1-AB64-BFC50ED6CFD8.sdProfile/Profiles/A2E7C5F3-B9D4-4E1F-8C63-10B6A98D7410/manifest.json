@@ -86,10 +86,10 @@
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "2,2": {
-      "Name": "Toggle Zoom",
-      "Settings": { "command": "zoom" },
+      "Name": "Adaptive Pane",
+      "Settings": { "command": "pane-primary", "splitDirection": "right" },
       "State": 0,
-      "States": [{ "Title": "ZOOM", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
+      "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
       "UUID": "com.so1omon563.herdr-control.command"
     },
     "3,2": {
