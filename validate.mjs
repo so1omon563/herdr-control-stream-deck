@@ -308,7 +308,8 @@ assert.deepEqual(commandPresentation({ command: "resize-up" }), {
 assert.equal(errorRestoreTitle({ action: "com.so1omon563.herdr-control.command", settings: { command: "tab-next" } }, "NEXT\nSPACE"), "NEXT\nTAB");
 assert.equal(errorRestoreTitle({ action: "com.so1omon563.herdr-control.toggle" }, undefined), undefined);
 assert.ok(source.includes("syncCommand(message.context, settings, true)"));
-assert.ok(source.includes("runCommand(message.context, commandForSettings("));
+assert.match(source, /async function runCommandKey[\s\S]*?command !== "pane-primary"[\s\S]*?adaptivePaneKeyBusy\.has\(context\)[\s\S]*?adaptivePaneKeyBusy\.add\(context\)[\s\S]*?finally[\s\S]*?adaptivePaneKeyBusy\.delete\(context\)/);
+assert.ok(source.includes("runCommandKey(message.context, message.payload?.settings)"));
 assert.throws(() => herdrExecutable([]), /HERDR executable not found in a supported install location/);
 await assert.rejects(terminalForLaunch("kitty", () => false), /kitty is not installed/);
 await assert.rejects(terminalForLaunch("auto", () => false), /No supported terminal is installed/);

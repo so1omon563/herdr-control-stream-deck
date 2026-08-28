@@ -904,6 +904,7 @@ const knownDevices = new Set(devicesAtLaunch.map(device => device.id));
 const deviceTypes = new Map(devicesAtLaunch.map(device => [device.id, device.type]));
 const herdrProfileDevices = new Set();
 const encoderBusy = new Set();
+const adaptivePaneKeyBusy = new Set();
 const agentSelections = new Map();
 const agentPages = new Map();
 let busy = false;
@@ -1192,6 +1193,19 @@ async function runCommand(context, command, acknowledge = true, settings = conte
   }
 }
 
+async function runCommandKey(context, rawSettings) {
+  const settings = rawSettings ?? contextInfo.get(context)?.settings;
+  const command = commandForSettings(settings);
+  if (command !== "pane-primary") return runCommand(context, command, true, settings);
+  if (adaptivePaneKeyBusy.has(context)) return;
+  adaptivePaneKeyBusy.add(context);
+  try {
+    await runCommand(context, command, true, settings);
+  } finally {
+    adaptivePaneKeyBusy.delete(context);
+  }
+}
+
 async function returnToPreviousProfile(context) {
   try {
     const client = await attachedClient();
@@ -1342,8 +1356,7 @@ function connectPlugin() {
     } else if (message.event === "keyUp") {
       if (message.action === TOGGLE_UUID) toggle(message.context);
       else if (message.action === COMMAND_UUID) {
-        const settings = message.payload?.settings ?? contextInfo.get(message.context)?.settings;
-        runCommand(message.context, commandForSettings(settings), true, settings);
+        runCommandKey(message.context, message.payload?.settings);
       }
       else if (message.action === BACK_UUID) returnToPreviousProfile(message.context);
       else if (message.action === AGENT_UUID) {
