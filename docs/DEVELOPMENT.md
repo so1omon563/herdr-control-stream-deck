@@ -23,10 +23,10 @@ npm run validate:streamdeck
 ```
 
 The repository validation checks manifests, profile layouts, icons, agent
-folder pagination and status presentation, dial behavior, command mappings,
-and the pane-routing regressions found during hardware testing. The Stream Deck
-validation runs the official CLI against the personal plugin UUID without
-updating its validation schemas during the run.
+folder pagination and status presentation, adaptive split-or-zoom behavior,
+dial feedback, command mappings, and the pane-routing regressions found during
+hardware testing. The Stream Deck validation runs the official CLI against the
+personal plugin UUID without updating its validation schemas during the run.
 
 ## Profiles
 
@@ -37,6 +37,15 @@ npm run build:profiles
 ```
 
 Do not hand-edit the `.streamDeckProfile` archives.
+
+The Stream Deck+ Pane dial and 15-key Pane key both use the shared
+`pane-primary` command. It resolves panes only in the focused tab, splits a
+single pane with `--focus`, and toggles zoom when multiple panes exist. Each
+action stores `splitDirection` as `right` or `down`; the Property Inspector
+labels those choices **Side by side (Split Right)** and **Stacked (Split
+Down)**. On the 15-key profile, the adaptive action must leave its static
+profile title unset so runtime feedback can display `SPLIT` or `ZOOM`; the
+direction-specific split icon communicates the configured orientation.
 
 ## Packaging
 
@@ -73,6 +82,12 @@ tree intact. Hardware testing displayed and focused six live agents in its
 ten-slot folder. Stream Deck+ testing covered empty, two-agent, and six-agent
 states, including four-slot pagination across two pages. Unused navigation and
 agent slots render black so the physical keys appear off.
+
+Adaptive Pane hardware testing covered both split preferences on both bundled
+profiles. From a single-pane tab, each action created and focused the expected
+side-by-side or stacked pane. With multiple panes, each action switched to Zoom
+feedback and toggled zoom. The 15-key action also changed its icon and concise
+runtime title between the Split and Zoom states.
 
 A hardware smoke test placed `com.so1omon563.herdr-control.toggle` on the
 existing 15-key default profile and confirmed that pressing it opens Herdr and

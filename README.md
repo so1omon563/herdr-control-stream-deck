@@ -10,11 +10,16 @@ Herdr Control brings workspace, tab, pane, and agent navigation from [Herdr](htt
 - Launch or focus Herdr in Ghostty, kitty, iTerm2, or Terminal.app.
 - Automatically switch to dedicated 15-key Stream Deck and Stream Deck+ profiles.
 - Navigate and create workspaces and tabs.
-- Navigate, split, resize, and zoom panes, including mixed horizontal and vertical layouts.
+- Navigate, split, resize, and zoom panes, including mixed horizontal and vertical layouts. The Pane dial press and 15-key Pane action split a single-pane tab and toggle zoom when the tab already has multiple panes.
 - Browse and focus agents from a dedicated folder on both bundled profiles or
   from the Stream Deck+ dial.
 - Open Herdr-native Settings, Rename, and Close interactions.
 - Add configurable Herdr Command actions to custom Stream Deck profiles.
+
+Select the Pane dial or adaptive Pane key in Stream Deck to choose whether a
+single-pane tab opens side by side with **Split Right** or stacked with
+**Split Down**. Side by side is the default. Explicit Split Right, Split Down,
+and Toggle Zoom commands remain available.
 
 ## Requirements
 
