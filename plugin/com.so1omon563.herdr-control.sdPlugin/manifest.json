@@ -73,6 +73,21 @@
       ],
       "UUID": "com.so1omon563.herdr-control.encoder",
       "VisibleInActionsList": false
+    },
+    {
+      "Controllers": [
+        "Keypad"
+      ],
+      "Icon": "images/agents",
+      "Name": "HERDR Agent",
+      "States": [
+        {
+          "Image": "images/agents",
+          "TitleAlignment": "bottom"
+        }
+      ],
+      "UUID": "com.so1omon563.herdr-control.agent",
+      "VisibleInActionsList": false
     }
   ],
   "Author": "so1omon563",

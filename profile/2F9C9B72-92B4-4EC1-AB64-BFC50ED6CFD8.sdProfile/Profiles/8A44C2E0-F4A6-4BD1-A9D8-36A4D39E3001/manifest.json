@@ -1,0 +1,47 @@
+{
+  "Controllers": [{
+  "Actions": {
+    "0,0": {
+      "Name": "Parent Folder",
+      "Settings": {},
+      "State": 0,
+      "States": [{}],
+      "UUID": "com.elgato.streamdeck.profile.backtoparent"
+    },
+    "1,0": {
+      "Name": "Previous Agent Page",
+      "Settings": { "role": "prev", "pageSize": 10 },
+      "State": 0,
+      "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": false, "FontSize": 10 }],
+      "UUID": "com.so1omon563.herdr-control.agent"
+    },
+    "2,0": {
+      "Name": "Agent Page",
+      "Settings": { "role": "page", "pageSize": 10 },
+      "State": 0,
+      "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 10 }],
+      "UUID": "com.so1omon563.herdr-control.agent"
+    },
+    "3,0": {
+      "Name": "Next Agent Page",
+      "Settings": { "role": "next", "pageSize": 10 },
+      "State": 0,
+      "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": false, "FontSize": 10 }],
+      "UUID": "com.so1omon563.herdr-control.agent"
+    },
+    "0,1": { "Name": "Agent 1", "Settings": { "role": "agent", "pageSize": 10, "slot": 0 }, "State": 0, "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 10 }], "UUID": "com.so1omon563.herdr-control.agent" },
+    "1,1": { "Name": "Agent 2", "Settings": { "role": "agent", "pageSize": 10, "slot": 1 }, "State": 0, "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 10 }], "UUID": "com.so1omon563.herdr-control.agent" },
+    "2,1": { "Name": "Agent 3", "Settings": { "role": "agent", "pageSize": 10, "slot": 2 }, "State": 0, "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 10 }], "UUID": "com.so1omon563.herdr-control.agent" },
+    "3,1": { "Name": "Agent 4", "Settings": { "role": "agent", "pageSize": 10, "slot": 3 }, "State": 0, "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 10 }], "UUID": "com.so1omon563.herdr-control.agent" },
+    "4,1": { "Name": "Agent 5", "Settings": { "role": "agent", "pageSize": 10, "slot": 4 }, "State": 0, "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 10 }], "UUID": "com.so1omon563.herdr-control.agent" },
+    "0,2": { "Name": "Agent 6", "Settings": { "role": "agent", "pageSize": 10, "slot": 5 }, "State": 0, "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 10 }], "UUID": "com.so1omon563.herdr-control.agent" },
+    "1,2": { "Name": "Agent 7", "Settings": { "role": "agent", "pageSize": 10, "slot": 6 }, "State": 0, "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 10 }], "UUID": "com.so1omon563.herdr-control.agent" },
+    "2,2": { "Name": "Agent 8", "Settings": { "role": "agent", "pageSize": 10, "slot": 7 }, "State": 0, "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 10 }], "UUID": "com.so1omon563.herdr-control.agent" },
+    "3,2": { "Name": "Agent 9", "Settings": { "role": "agent", "pageSize": 10, "slot": 8 }, "State": 0, "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 10 }], "UUID": "com.so1omon563.herdr-control.agent" },
+    "4,2": { "Name": "Agent 10", "Settings": { "role": "agent", "pageSize": 10, "slot": 9 }, "State": 0, "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 10 }], "UUID": "com.so1omon563.herdr-control.agent" }
+  },
+  "Type": "Keypad"
+  }],
+  "Icon": "",
+  "Name": "Agents"
+}

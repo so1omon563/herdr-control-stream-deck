@@ -7,6 +7,7 @@ const TOGGLE_UUID = "com.so1omon563.herdr-control.toggle";
 const COMMAND_UUID = "com.so1omon563.herdr-control.command";
 const BACK_UUID = "com.so1omon563.herdr-control.back";
 const ENCODER_UUID = "com.so1omon563.herdr-control.encoder";
+const AGENT_UUID = "com.so1omon563.herdr-control.agent";
 const HERDR_PROFILES = {
   0: "profiles/HERDR",
   7: "profiles/HERDR Plus"
@@ -592,6 +593,127 @@ function selectAgent(state, selectedPaneId, delta = 0) {
   return delta ? adjacent(agents, selected?.pane_id, "pane_id", delta) : selected ?? agents[0];
 }
 
+const AGENT_STATUSES = new Set(["idle", "working", "blocked", "done", "unknown"]);
+const AGENT_STATUS_COLORS = {
+  idle: "#FFD166",
+  working: "#7DF9FF",
+  blocked: "#FF6B6B",
+  done: "#7DFFB2",
+  unknown: "#8A8F98"
+};
+
+function agentStatus(agent) {
+  const status = String(agent?.agent_status ?? "unknown").toLowerCase();
+  return AGENT_STATUSES.has(status) ? status : "unknown";
+}
+
+function agentStatusColor(agent) {
+  return AGENT_STATUS_COLORS[agentStatus(agent)];
+}
+
+function compactKeyLabel(value, fallback, maxLength = 12) {
+  const label = String(value ?? "").trim().replace(/\s+/g, " ") || fallback;
+  return label.length <= maxLength ? label : `${label.slice(0, maxLength - 3)}...`;
+}
+
+function agentKeyTitle(state, agent) {
+  if (!agent) return "";
+  const name = compactKeyLabel(
+    agent.display_agent || agent.name || agent.agent,
+    "AGENT"
+  ).toUpperCase();
+  const workspace = state?.workspaces?.find(item => item.workspace_id === agent.workspace_id);
+  const workspaceName = compactKeyLabel(
+    workspace?.label,
+    workspace ? `SPACE ${workspace.number}` : "NO SPACE"
+  ).toUpperCase();
+  return `${name}\n${workspaceName}`;
+}
+
+function agentStatusGlyph(status) {
+  if (status === "working") return '<path d="M105 21L118 29L105 37Z" fill="#171923"/>';
+  if (status === "idle") return '<path d="M105 21V37M115 21V37" stroke="#171923" stroke-width="4" stroke-linecap="round"/>';
+  if (status === "blocked") return '<path d="M104 23L116 35M116 23L104 35" stroke="#171923" stroke-width="4" stroke-linecap="round"/>';
+  if (status === "done") return '<path d="M102 29L108 35L118 22" stroke="#171923" stroke-width="4" stroke-linecap="round" stroke-linejoin="round"/>';
+  return '<text x="110" y="35" text-anchor="middle" font-family="Arial, sans-serif" font-size="19" font-weight="700" fill="#171923">?</text>';
+}
+
+function agentKeyImage(agent, focusedPaneId) {
+  const status = agentStatus(agent);
+  const color = agentStatusColor(agent);
+  const focused = agent?.pane_id === focusedPaneId;
+  const svg = `<svg width="144" height="144" viewBox="0 0 144 144" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect x="3" y="3" width="138" height="138" rx="19" fill="#171923" stroke="${focused ? "#CDB7FF" : "#7DF9FF"}" stroke-width="${focused ? 8 : 5}"/>
+  <text x="18" y="29" font-family="Arial, sans-serif" font-size="16" font-weight="700" fill="${color}">${status.toUpperCase()}</text>
+  <path d="M72 38V48" stroke="#D9DAD8" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="72" cy="34" r="5" fill="#7DF9FF"/>
+  <rect x="34" y="48" width="76" height="60" rx="13" stroke="#D9DAD8" stroke-width="6"/>
+  <circle cx="58" cy="73" r="6" fill="#7DF9FF"/>
+  <circle cx="86" cy="73" r="6" fill="#7DF9FF"/>
+  <path d="M57 92H87" stroke="#7DF9FF" stroke-width="6" stroke-linecap="round"/>
+  <circle cx="110" cy="29" r="17" fill="${color}"/>
+  ${agentStatusGlyph(status)}
+</svg>`;
+  return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
+}
+
+function agentActionSettings(settings = {}) {
+  const role = ["agent", "prev", "page", "next"].includes(settings.role) ? settings.role : "agent";
+  const pageSize = [4, 10].includes(Number(settings.pageSize)) ? Number(settings.pageSize) : 4;
+  const slot = Number.isInteger(Number(settings.slot)) && Number(settings.slot) >= 0
+    ? Number(settings.slot)
+    : 0;
+  return { role, pageSize, slot };
+}
+
+function agentPageCount(agentCount, pageSize) {
+  return Math.max(1, Math.ceil(agentCount / pageSize));
+}
+
+function normalizeAgentPage(page, agentCount, pageSize) {
+  return Math.min(Math.max(0, Number(page) || 0), agentPageCount(agentCount, pageSize) - 1);
+}
+
+function shiftAgentPage(page, delta, agentCount, pageSize) {
+  const count = agentPageCount(agentCount, pageSize);
+  return (normalizeAgentPage(page, agentCount, pageSize) + delta + count) % count;
+}
+
+function agentForSlot(state, page, pageSize, slot) {
+  return state?.agents?.[normalizeAgentPage(page, state?.agents?.length ?? 0, pageSize) * pageSize + slot] ?? null;
+}
+
+function agentKeyPresentation(state, settings, page = 0) {
+  const { role, pageSize, slot } = agentActionSettings(settings);
+  const agents = state?.agents ?? [];
+  const normalizedPage = normalizeAgentPage(page, agents.length, pageSize);
+  const pages = agentPageCount(agents.length, pageSize);
+  if (role === "prev") {
+    return { title: "", image: pages > 1 ? "images/agent-page-previous.svg" : "images/blank.svg" };
+  }
+  if (role === "next") {
+    return { title: "", image: pages > 1 ? "images/agent-page-next.svg" : "images/blank.svg" };
+  }
+  if (role === "page") {
+    return {
+      title: pages > 1 ? `${normalizedPage + 1}/${pages}` : "",
+      image: pages > 1 ? "images/agents.svg" : "images/blank.svg"
+    };
+  }
+  const agent = agentForSlot(state, normalizedPage, pageSize, slot);
+  if (agent) {
+    return {
+      title: agentKeyTitle(state, agent),
+      image: agentKeyImage(agent, state?.focused_pane_id),
+      agent
+    };
+  }
+  return {
+    title: !agents.length && slot === 0 ? "NO\nAGENTS" : "",
+    image: !agents.length && slot === 0 ? "images/agents-empty.svg" : "images/blank.svg"
+  };
+}
+
 async function sendPrefixKey(keyCode, shift = false) {
   const client = await attachedClient();
   if (!client) throw new Error("HERDR client is not attached");
@@ -757,10 +879,12 @@ const deviceTypes = new Map(devicesAtLaunch.map(device => [device.id, device.typ
 const herdrProfileDevices = new Set();
 const encoderBusy = new Set();
 const agentSelections = new Map();
+const agentPages = new Map();
 let busy = false;
 let lastAttachedState = -1;
 let terminalPreference = "auto";
 let socket;
+let liveRefreshPromise;
 
 function send(message) {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message));
@@ -928,21 +1052,60 @@ function encoderFeedback(dial, state, selectedAgentPaneId) {
     glyph: "images/dial-agent.svg",
     label: agent ? `AGENTS · ${position}/${agents.length}` : "AGENTS",
     value: workspace?.label?.trim() || (workspace ? `SPACE ${workspace.number}` : agentName) || "NO AGENTS",
-    hint: agent ? `${agentName?.toUpperCase() || "AGENT"} · PRESS TO FOCUS` : "WAITING FOR AGENTS"
+    hint: agent
+      ? `${agentName?.toUpperCase() || "AGENT"} · ${agentStatus(agent).toUpperCase()} · PRESS TO FOCUS`
+      : "WAITING FOR AGENTS"
   };
 }
 
-async function refreshEncoderFeedbacks() {
+async function refreshEncoderFeedbacks(state) {
   const encoders = [...contextInfo.entries()].filter(([, info]) => info.action === ENCODER_UUID);
   if (!encoders.length) return;
-  let state;
-  try {
-    state = await snapshot();
-  } catch {}
   for (const [context, info] of encoders) {
     const selected = info.settings.dial === "client" ? selectAgent(state, agentSelections.get(context)) : null;
     if (selected) agentSelections.set(context, selected.pane_id);
     setFeedback(context, encoderFeedback(info.settings.dial, state, selected?.pane_id));
+  }
+}
+
+function setAgentPresentation(context, presentation) {
+  const info = contextInfo.get(context);
+  if (!info) return;
+  const signature = `${presentation.title}\n${presentation.image}`;
+  if (info.agentPresentation === signature) return;
+  info.agentPresentation = signature;
+  info.agentTitle = presentation.title;
+  setTitle(context, presentation.title);
+  setImage(context, presentation.image);
+}
+
+function refreshAgentKeys(state) {
+  const contexts = [...contextInfo.entries()].filter(([, info]) => info.action === AGENT_UUID);
+  for (const [context, info] of contexts) {
+    const settings = agentActionSettings(info.settings);
+    const agentCount = state?.agents?.length ?? 0;
+    const page = normalizeAgentPage(agentPages.get(info.device), agentCount, settings.pageSize);
+    agentPages.set(info.device, page);
+    setAgentPresentation(context, agentKeyPresentation(state, settings, page));
+  }
+}
+
+async function refreshLiveFeedbacks() {
+  if (liveRefreshPromise) return liveRefreshPromise;
+  liveRefreshPromise = (async () => {
+    const hasLiveControls = [...contextInfo.values()].some(info => info.action === ENCODER_UUID || info.action === AGENT_UUID);
+    if (!hasLiveControls) return;
+    let state;
+    try {
+      state = await snapshot();
+    } catch {}
+    await refreshEncoderFeedbacks(state);
+    refreshAgentKeys(state);
+  })();
+  try {
+    return await liveRefreshPromise;
+  } finally {
+    liveRefreshPromise = null;
   }
 }
 
@@ -969,7 +1132,7 @@ async function runCommand(context, command, acknowledge = true) {
   try {
     const result = await executeCommand(command);
     if (acknowledge && result !== false) showOk(context);
-    await refreshEncoderFeedbacks();
+    await refreshLiveFeedbacks();
   } catch (error) {
     showError(context, error, COMMAND_TITLES[command] ?? "HERDR");
   }
@@ -985,6 +1148,32 @@ async function returnToPreviousProfile(context) {
   }
 }
 
+async function runAgentKey(context, rawSettings) {
+  const info = contextInfo.get(context);
+  const settings = agentActionSettings(rawSettings ?? info?.settings);
+  let state;
+  try {
+    state = await snapshot();
+    const agentCount = state?.agents?.length ?? 0;
+    const page = normalizeAgentPage(agentPages.get(info?.device), agentCount, settings.pageSize);
+    if (settings.role === "prev" || settings.role === "page" || settings.role === "next") {
+      agentPages.set(
+        info?.device,
+        shiftAgentPage(page, settings.role === "prev" ? -1 : 1, agentCount, settings.pageSize)
+      );
+      refreshAgentKeys(state);
+      return;
+    }
+    const agent = agentForSlot(state, page, settings.pageSize, settings.slot);
+    if (!agent) return showAlert(context);
+    await run(herdrExecutable(), ["agent", "focus", agent.pane_id]);
+    showOk(context);
+    await refreshLiveFeedbacks();
+  } catch (error) {
+    showError(context, error, info?.agentTitle ?? "AGENT");
+  }
+}
+
 async function runEncoder(context, dial, event, payload) {
   if (encoderBusy.has(context)) return;
   if (dial === "client" && (event === "dialRotate" || event === "dialUp")) {
@@ -997,7 +1186,7 @@ async function runEncoder(context, dial, event, payload) {
       agentSelections.set(context, selected.pane_id);
       if (event === "dialUp") {
         await run(herdrExecutable(), ["agent", "focus", selected.pane_id]);
-        await refreshEncoderFeedbacks();
+        await refreshLiveFeedbacks();
       } else {
         setFeedback(context, encoderFeedback("client", state, selected.pane_id));
       }
@@ -1025,7 +1214,7 @@ function connectPlugin() {
   socket.addEventListener("open", () => {
     send({ event: registerEvent, uuid: pluginUUID });
     send({ event: "getGlobalSettings", context: pluginUUID });
-    setInterval(() => refresh().then(() => refreshEncoderFeedbacks()).catch(() => {}), 1000);
+    setInterval(() => refresh().then(() => refreshLiveFeedbacks()).catch(() => {}), 1000);
   });
 
   socket.addEventListener("message", event => {
@@ -1056,10 +1245,11 @@ function connectPlugin() {
       knownDevices.delete(message.device);
       deviceTypes.delete(message.device);
       herdrProfileDevices.delete(message.device);
+      agentPages.delete(message.device);
       return;
     }
 
-    if (![TOGGLE_UUID, COMMAND_UUID, BACK_UUID, ENCODER_UUID].includes(message.action)) return;
+    if (![TOGGLE_UUID, COMMAND_UUID, BACK_UUID, ENCODER_UUID, AGENT_UUID].includes(message.action)) return;
 
     if (message.event === "willAppear") {
       const settings = message.payload?.settings ?? {};
@@ -1076,7 +1266,9 @@ function connectPlugin() {
         setTitle(message.context, "BACK");
       } else if (message.action === ENCODER_UUID) {
         setFeedbackLayout(message.context, "layouts/herdr-dial.json");
-        refreshEncoderFeedbacks().catch(() => showAlert(message.context));
+        refreshLiveFeedbacks().catch(() => showAlert(message.context));
+      } else if (message.action === AGENT_UUID) {
+        refreshLiveFeedbacks().catch(() => showAlert(message.context));
       }
       refresh(true).catch(() => showAlert(message.context));
     } else if (message.event === "willDisappear") {
@@ -1091,6 +1283,9 @@ function connectPlugin() {
         runCommand(message.context, commandForSettings(message.payload?.settings ?? contextInfo.get(message.context)?.settings));
       }
       else if (message.action === BACK_UUID) returnToPreviousProfile(message.context);
+      else if (message.action === AGENT_UUID) {
+        runAgentKey(message.context, message.payload?.settings ?? contextInfo.get(message.context)?.settings);
+      }
     } else if (message.action === ENCODER_UUID && ["dialRotate", "dialUp", "touchTap"].includes(message.event)) {
       const dial = message.payload?.settings?.dial ?? contextInfo.get(message.context)?.settings?.dial;
       runEncoder(message.context, dial, message.event, message.payload);
@@ -1098,5 +1293,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, terminalForLaunch, terminalIds };
+module.exports = { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeTerminal, paneCommandArgs, paneCycleTarget, paneRouteDirections, prefixCommand, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds };
 if (require.main === module) connectPlugin();

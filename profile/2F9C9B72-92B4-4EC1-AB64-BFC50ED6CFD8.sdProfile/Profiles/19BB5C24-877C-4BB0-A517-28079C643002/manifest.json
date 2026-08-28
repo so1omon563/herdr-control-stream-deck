@@ -1,4 +1,5 @@
 {
+  "Controllers": [{
   "Actions": {
     "0,0": {
       "Name": "Parent Folder",
@@ -36,7 +37,8 @@
       "UUID": "com.so1omon563.herdr-control.command"
     }
   },
-  "DeviceModel": "20GBA9901",
-  "Name": "Resize",
-  "Version": "1.0"
+  "Type": "Keypad"
+  }],
+  "Icon": "",
+  "Name": "Resize"
 }
