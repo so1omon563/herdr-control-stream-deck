@@ -8,6 +8,7 @@
 - `profile/`: unpacked 15-key profile source.
 - `profile-plus/`: unpacked Stream Deck+ profile source.
 - `scripts/check-release.mjs`: release version and packaged-manifest contract.
+- `scripts/check-next-version.mjs`: pre-tag marker and next-version contract.
 - `validate.mjs`: validation and regression checks.
 
 ## Validate

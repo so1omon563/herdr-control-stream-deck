@@ -41,6 +41,11 @@ Normal pull requests do not create tags or releases. The bumper uses
 `default_bump: none`, and release creation is also gated on its
 `should_release` output.
 
+Before the tag-writing action runs, the workflow applies the bumper's hashtag
+marker precedence to the merged commit message, calculates the next version
+from the highest existing stable tag, and requires the staged package metadata
+to match. A mismatched release PR fails before it can create an immutable tag.
+
 For a release:
 
 1. Update `package.json`, `package-lock.json`, and the Stream Deck manifest to

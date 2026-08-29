@@ -4,6 +4,12 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import {
+  assertNextVersion,
+  bumpFromMessage,
+  expectedReleaseVersion,
+  highestStableVersion
+} from "./scripts/check-next-version.mjs";
 
 const require = createRequire(import.meta.url);
 const root = new URL(".", import.meta.url).pathname;
@@ -76,6 +82,7 @@ for (const requiredText of [
   "workflow_dispatch:",
   "uses: so1omon563/custom-semver-bumper@v1",
   "default_bump: none",
+  "node scripts/check-next-version.mjs",
   "node scripts/check-release.mjs \"$NEW_TAG\"",
   "needs.bump-version.outputs.release_requested == 'true'",
   "ref: ${{ env.RELEASE_TAG }}",
@@ -87,12 +94,29 @@ for (const requiredText of [
 }
 assert.doesNotMatch(releaseWorkflow, /move_(major|minor)_tag:\s*['"]?true/);
 assert.doesNotMatch(releaseWorkflow, /move-(major|minor)-tag:\s*['"]?true/);
+assert.doesNotMatch(releaseWorkflow, /branch_name:/);
+assert.ok(
+  releaseWorkflow.indexOf("node scripts/check-next-version.mjs") <
+    releaseWorkflow.indexOf("uses: so1omon563/custom-semver-bumper@v1"),
+  "next-version validation must run before custom-semver-bumper creates a tag"
+);
 
 const releaseCheck = join(root, "scripts/check-release.mjs");
 execFileSync(process.execPath, [releaseCheck, `v${packageManifest.version}`]);
 assert.throws(
   () => execFileSync(process.execPath, [releaseCheck, "v999.0.0"], { stdio: "pipe" }),
   error => error.status !== 0
+);
+assert.equal(bumpFromMessage("Release #patch\n\nExample: #major"), "patch");
+assert.equal(bumpFromMessage("Docs\n\nPrepare #minor"), "minor");
+assert.equal(bumpFromMessage("Docs #patchwork"), null);
+assert.equal(bumpFromMessage("Release #patch #skip"), null);
+assert.equal(bumpFromMessage("Skip this\n\n#patch #skip"), null);
+assert.deepEqual(highestStableVersion(["v0.1.9", "v0.2.0", "v0.3.0-beta.1"]), [0, 2, 0]);
+assert.equal(expectedReleaseVersion(["v0.1.0"], "Release #patch"), "0.1.1");
+assert.throws(
+  () => assertNextVersion("0.2.0", ["v0.1.0"], "Release #patch"),
+  /would create v0\.1\.1, but staged package metadata is v0\.2\.0/
 );
 for (const [name, bundle, model] of [
   ["HERDR.streamDeckProfile", "2F9C9B72-92B4-4EC1-AB64-BFC50ED6CFD8.sdProfile", "20GBA9901"],

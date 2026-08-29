@@ -40,14 +40,15 @@ jobs:
           node-version: 24
 
       - name: Validate staged release metadata
-        run: node scripts/check-release.mjs
+        run: |
+          node scripts/check-release.mjs
+          node scripts/check-next-version.mjs
 
       - name: Bump version tag
         id: bump
         uses: so1omon563/custom-semver-bumper@v1
         with:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-          branch_name: ${{ github.event.pull_request.head.ref }}
           default_bump: none
           move_major_tag: 'false'
           move_minor_tag: 'false'
