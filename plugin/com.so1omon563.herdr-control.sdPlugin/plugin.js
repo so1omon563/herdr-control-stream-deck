@@ -287,6 +287,22 @@ async function attachedClient() {
   return (await attachedClients())[0] ?? null;
 }
 
+function clientKey(client) {
+  return `${client.terminal}:${client.id}`;
+}
+
+function workspacePickerPruneTerminals(preference, trackedClientKeys) {
+  const selectedTerminals = new Set(terminalIds(preference));
+  const terminals = new Set();
+  for (const key of trackedClientKeys) {
+    const terminal = key.slice(0, key.indexOf(":"));
+    if (TERMINAL_ORDER.includes(terminal) && !selectedTerminals.has(terminal)) {
+      terminals.add(terminal);
+    }
+  }
+  return [...terminals];
+}
+
 async function frontmostProcessPid() {
   const script = 'tell application "System Events" to unix id of first application process whose frontmost is true';
   return run("/usr/bin/osascript", ["-e", script], 5000);
@@ -645,8 +661,8 @@ function agentKeyPresentation(state, settings, page = 0) {
   };
 }
 
-async function sendKeySequence(sequence) {
-  const client = await attachedClient();
+async function sendKeySequence(sequence, client) {
+  client ??= await attachedClient();
   if (!client) throw new Error("HERDR client is not attached");
   await focusClient(client);
   const keyLines = sequence.flatMap((chord, index) => (
@@ -661,6 +677,30 @@ async function sendKeySequence(sequence) {
     "end tell",
   ].join("\n");
   await run("/usr/bin/osascript", ["-e", script]);
+}
+
+const ESCAPE_KEY_SEQUENCE = [{ keyCode: 53, modifiers: [] }];
+
+function workspacePickerSequence(isOpen, resolveOpenSequence) {
+  return isOpen ? ESCAPE_KEY_SEQUENCE : resolveOpenSequence();
+}
+
+async function toggleWorkspacePicker() {
+  if (workspacePickerBusy) return false;
+  workspacePickerBusy = true;
+  try {
+    const client = await attachedClient();
+    if (!client) throw new Error("HERDR client is not attached");
+    const key = clientKey(client);
+    const isOpen = workspacePickerOpenClients.has(key);
+    const sequence = workspacePickerSequence(isOpen, () => commandKeySequence("workspace-picker"));
+    await sendKeySequence(sequence, client);
+    if (isOpen) workspacePickerOpenClients.delete(key);
+    else workspacePickerOpenClients.add(key);
+    return true;
+  } finally {
+    workspacePickerBusy = false;
+  }
 }
 
 function paneCycleTarget(state, command) {
@@ -719,6 +759,7 @@ async function cyclePane(command, state) {
 }
 
 async function executeCommand(command, settings = {}) {
+  if (command === "workspace-picker") return toggleWorkspacePicker();
   const keySequence = commandKeySequence(command);
   if (keySequence) return sendKeySequence(keySequence);
   if (command === "detach") {
@@ -808,9 +849,11 @@ const deviceTypes = new Map(devicesAtLaunch.map(device => [device.id, device.typ
 const herdrProfileDevices = new Set();
 const encoderBusy = new Set();
 const adaptivePaneKeyBusy = new Set();
+const workspacePickerOpenClients = new Set();
 const agentSelections = new Map();
 const agentPages = new Map();
 let busy = false;
+let workspacePickerBusy = false;
 let lastAttachedState = -1;
 let terminalPreference = "auto";
 let socket;
@@ -941,6 +984,15 @@ async function syncHerdrProfile(clients) {
 
 async function refresh(force = false) {
   const clients = await attachedClients();
+  const attachedClientKeys = new Set(clients.map(clientKey));
+  for (const terminal of workspacePickerPruneTerminals(terminalPreference, workspacePickerOpenClients)) {
+    for (const client of await clientsForTerminal(terminal)) {
+      attachedClientKeys.add(clientKey(client));
+    }
+  }
+  for (const key of workspacePickerOpenClients) {
+    if (!attachedClientKeys.has(key)) workspacePickerOpenClients.delete(key);
+  }
   const attachedState = clients.length ? 1 : 0;
   if (force || attachedState !== lastAttachedState) {
     lastAttachedState = attachedState;
@@ -1272,5 +1324,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds };
+module.exports = { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence };
 if (require.main === module) connectPlugin();

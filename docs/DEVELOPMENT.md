@@ -50,6 +50,17 @@ file metadata. A missing config uses documented defaults. Any unreadable,
 invalid, unbound, or unsupported configured value fails closed with `CUSTOM
 KEYS`; it never falls back blindly after an explicit unsupported assignment.
 
+The shared `workspace-picker` command tracks picker state by attached terminal
+client. Its first press sends the resolved configured binding; its next press
+sends Escape, which Herdr reserves for leaving navigate mode. The close path
+does not resolve the configurable opening binding. Successful sends are the
+only state transitions, concurrent presses are ignored, and state is discarded
+when the attached client disappears. Pruning checks tracked clients
+even when the global terminal preference currently excludes their terminal, so
+preference changes do not look like disconnections. Herdr 0.8.2 does not
+expose navigate-mode state through its CLI or socket snapshot, so
+keyboard-driven dismissal outside Herdr Control cannot be observed.
+
 ## Profiles
 
 Edit the unpacked profile sources, then regenerate the embedded profile archives:
