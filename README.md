@@ -1,77 +1,159 @@
 # Herdr Control for Stream Deck
 
-Herdr Control brings workspace, tab, pane, and agent navigation from [Herdr](https://herdr.dev/) to Elgato Stream Deck hardware.
+Herdr Control brings workspace, tab, pane, and agent navigation from
+[Herdr](https://herdr.dev/) to Elgato Stream Deck hardware.
 
-> [!WARNING]
-> This project is under active development and is not ready for public installation or Marketplace submission.
+> [!IMPORTANT]
+> Herdr Control is available for direct installation from GitHub as pre-release
+> software. It is not yet available through Elgato Marketplace. Current support
+> is limited to the exact software and hardware evidence in the
+> [support matrix](docs/SUPPORT.md).
 
-## What works today
+[Download Herdr Control v0.1.0](https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.0/Herdr-Control-v0.1.0.streamDeckPlugin)
+or [view all releases](https://github.com/so1omon563/herdr-control-stream-deck/releases).
 
-- Launch or focus Herdr in Ghostty, kitty, iTerm2, or Terminal.app.
-- Automatically switch to dedicated 15-key Stream Deck and Stream Deck+ profiles.
-- Navigate and create workspaces and tabs.
-- Navigate, split, resize, and zoom panes, including mixed horizontal and vertical layouts. The Pane dial press and 15-key Pane action split a single-pane tab and toggle zoom when the tab already has multiple panes.
-- Browse and focus agents from a dedicated folder on both bundled profiles or
-  from the Stream Deck+ dial.
-- Open Herdr-native Settings, Rename, and Close interactions.
-- Respect common custom Herdr prefixes and bindings for Spaces, Settings,
-  Sidebar, Rename, and Close.
-- Press Spaces again to close a workspace picker opened through Herdr Control.
-- Add configurable Herdr Command actions to custom Stream Deck profiles.
+## What it does
 
-Select the Pane dial or adaptive Pane key in Stream Deck to choose whether a
-single-pane tab opens side by side with **Split Right** or stacked with
-**Split Down**. Side by side is the default. Explicit Split Right, Split Down,
-and Toggle Zoom commands remain available.
+- Launches or focuses Herdr in Ghostty, kitty, iTerm2, or Terminal.app.
+- Switches supported hardware to a dedicated Herdr profile while Herdr is
+  active.
+- Navigates and creates workspaces and tabs.
+- Navigates, splits, resizes, and zooms panes, including mixed layouts.
+- Browses live agents and focuses the selected agent's pane.
+- Opens Spaces, Settings, Sidebar, Rename, and Close interactions.
+- Supports common custom Herdr prefixes and bindings for UI-only actions.
+- Adds configurable Herdr Command actions to custom Stream Deck profiles.
 
 ## Requirements
 
-- macOS 13 or later.
+- macOS 13 or later on Apple silicon.
 - Stream Deck 6.6 or later.
-- Herdr 0.8.2 available from a standard installation path.
-- A compatible Node.js runtime supplied by Stream Deck or installed in a
-  supported system path.
+- Herdr 0.8.2 installed in a [supported location](#supported-locations).
+- A compatible Node.js runtime available from Homebrew, `/usr/local`, `PATH`,
+  or Stream Deck.
 - A 15-key Stream Deck or Stream Deck+.
+- Ghostty, kitty, iTerm2, or Terminal.app.
 
-Only the exact versions and hardware listed in the
-[support matrix](docs/SUPPORT.md) are covered by current test evidence.
+Only the exact versions in the [support matrix](docs/SUPPORT.md) are covered by
+current test evidence. Intel Macs, other Stream Deck models, and other Herdr
+versions are not currently claimed.
 
-### Supported install locations
+## Install from GitHub
 
-Herdr Control looks for the `herdr` executable at `/opt/homebrew/bin/herdr`,
-`/usr/local/bin/herdr`, `~/.local/bin/herdr`, and `~/.cargo/bin/herdr`.
+No Git clone, npm command, or development tooling is required.
 
-Supported terminal applications are discovered in these locations:
+1. Download the current
+   [Herdr Control installer](https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.0/Herdr-Control-v0.1.0.streamDeckPlugin)
+   and its
+   [SHA-256 checksum](https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.0/Herdr-Control-v0.1.0.streamDeckPlugin.sha256).
+2. Optionally verify the download in Terminal:
 
-- Ghostty: `/Applications/Ghostty.app` or `~/Applications/Ghostty.app`
-- kitty: `/Applications/kitty.app` or `~/Applications/kitty.app`
-- iTerm2: `iTerm.app` or `iTerm2.app` under `/Applications` or `~/Applications`
-- Terminal.app: `/System/Applications/Utilities/Terminal.app` or `/Applications/Utilities/Terminal.app`
+   ```sh
+   cd ~/Downloads
+   shasum -a 256 -c Herdr-Control-v0.1.0.streamDeckPlugin.sha256
+   ```
 
-If an action displays `INSTALL HERDR`, install Herdr in one of the supported
-locations. `INSTALL <TERMINAL>` means the selected terminal is unavailable;
-install it or select another terminal in the action settings. `NO TERMINAL`
-means Auto could not find any supported terminal. Detailed failures are written
-under `~/Library/Application Support/com.elgato.StreamDeck/Plugins/` in
-`com.so1omon563.herdr-control.sdPlugin/logs/`.
+   A valid download reports `Herdr-Control-v0.1.0.streamDeckPlugin: OK`.
+3. Double-click `Herdr-Control-v0.1.0.streamDeckPlugin` and approve the plugin
+   installation in Stream Deck.
+4. When Stream Deck asks to install the bundled profiles, choose **Install
+   Profile(s)**. `HERDR` targets the 15-key Stream Deck and `HERDR Plus`
+   targets Stream Deck+.
 
-## Known limitations
+### If the bundled profiles do not appear
 
-- Custom Herdr bindings outside the documented subset below display `CUSTOM
-  KEYS` instead of sending a potentially incorrect key sequence.
-- Herdr 0.8.2 does not expose its client navigation mode. The Spaces toggle
-  therefore tracks picker opens and closes initiated through Herdr Control for
-  each attached terminal client. Dismissing the picker directly from Herdr's
-  keyboard can leave that local toggle state out of sync until the plugin is
-  restarted.
-- The current build and installation process is for development only.
-- Other Stream Deck models have not been tested yet.
+The installed plugin retains both profile files. In Finder, choose **Go → Go
+to Folder** and open:
+
+```text
+~/Library/Application Support/com.elgato.StreamDeck/Plugins/com.so1omon563.herdr-control.sdPlugin/profiles/
+```
+
+Double-click the profile for the connected device:
+
+- `HERDR.streamDeckProfile` for the 15-key Stream Deck
+- `HERDR Plus.streamDeckProfile` for Stream Deck+
+
+Do not import the unpacked profile source directories from the repository.
+
+## First use
+
+1. In the Stream Deck app, select a normal profile that you use outside Herdr.
+2. Find **Herdr Control** in the action list and drag **Open Herdr** onto a key.
+3. Select that key and choose a terminal in the Property Inspector. **Auto**
+   tries Ghostty, kitty, iTerm2, then Terminal.app.
+4. Press the key. Herdr Control launches or focuses Herdr and switches the
+   connected supported device to its bundled Herdr profile.
+5. Press **BACK** on the bundled profile to return to the previous profile.
+
+Spaces, Settings, Sidebar, Rename, and Close may need macOS Accessibility and
+Automation permission the first time they are used. See
+[macOS permissions](#macos-permissions).
+
+## Everyday controls
+
+### 15-key Stream Deck
+
+| Row | Key 1 | Key 2 | Key 3 | Key 4 | Key 5 |
+| --- | --- | --- | --- | --- | --- |
+| Top | Previous workspace | Next workspace | New workspace | More | Agents |
+| Middle | Previous tab | Next tab | New tab | Split right | Split down |
+| Bottom | Previous pane | Next pane | Adaptive Pane | Detach | Back |
+
+The adaptive Pane key splits and focuses a new pane when the current tab has
+one pane. With multiple panes, it changes to Zoom and toggles pane zoom.
+
+### Stream Deck+
+
+| Key row | Key 1 | Key 2 | Key 3 | Key 4 |
+| --- | --- | --- | --- | --- |
+| Top | More | Agents | Rename | Close |
+| Bottom | Split right | Split down | Detach | Back |
+
+| Dial | Rotate | Press |
+| --- | --- | --- |
+| Workspaces | Browse workspaces | Create workspace |
+| Tabs | Browse tabs | Create tab |
+| Panes | Browse panes | Split one pane or toggle zoom |
+| Agents | Browse live agents | Focus selected agent |
+
+### Shared folders
+
+- **More** contains Spaces, Resize, Settings, and Sidebar.
+- **Resize** contains titleless directional controls for left, up, right, and
+  down.
+- **Agents** shows agent type, workspace, and status. Press an occupied slot to
+  focus that agent. Pagination controls appear only when needed.
+- Stream Deck+ **Rename** and **Close** folders target the current workspace,
+  tab, or pane. These commands can be added to a 15-key or custom profile with
+  the configurable Herdr Command action.
+
+## Configuration
+
+### Terminal selection
+
+Select an **Open Herdr** key in Stream Deck to choose Auto, Ghostty, kitty,
+iTerm2, or Terminal.app. The selection is shared by Herdr Control. Auto uses
+the first installed terminal in the order shown in the Property Inspector.
+
+### Herdr Command actions
+
+Drag **Herdr Command** from the Herdr Control action list onto any custom
+profile. New actions default to **Next Workspace**. The Property Inspector can
+switch the key among supported workspace, tab, pane, resize, Settings,
+Sidebar, Detach, Rename, and Close commands. The key title and icon update to
+match the selected command.
+
+For **Adaptive Pane (Split or Zoom)**, choose whether a single-pane tab should
+open **Side by side (Split Right)** or **Stacked (Split Down)**. Multiple-pane
+tabs always use the same control to toggle zoom.
 
 ### Custom Herdr keybindings
 
-Herdr Control parses `HERDR_CONFIG_PATH` or
-`~/.config/herdr/config.toml` with the bundled `smol-toml` parser. It reads
-`keys.prefix` and these nine action fields:
+Most actions use the Herdr CLI and do not depend on keybindings. Spaces,
+Settings, Sidebar, Rename, and Close use Herdr's configured key sequences.
+Herdr Control reads `HERDR_CONFIG_PATH` or `~/.config/herdr/config.toml` and
+uses `keys.prefix` plus these fields:
 
 - `keys.workspace_picker`
 - `keys.settings`
@@ -79,49 +161,111 @@ Herdr Control parses `HERDR_CONFIG_PATH` or
 - `keys.rename_workspace`, `keys.rename_tab`, and `keys.rename_pane`
 - `keys.close_workspace`, `keys.close_tab`, and `keys.close_pane`
 
-Missing fields retain Herdr 0.8.2's documented defaults. An action binding may
-be a string or an array; arrays use the first value Herdr Control can simulate
-safely. Supported bindings include `prefix+key` sequences and direct modified
-chords. Modifier names are `ctrl` or `control`, `shift`, `alt` or `option`,
-`meta` as Herdr's Alt alias, and `cmd`, `command`, or `super`.
+Missing values use Herdr 0.8.2 defaults. A binding can be a string or an
+array; arrays use the first value Herdr Control can safely simulate. Supported
+forms are `prefix+key` sequences and direct chords with Ctrl, Shift,
+Alt/Option, Meta, or Cmd/Super.
 
-The supported key set is ASCII letters and digits, F1 through F24, Enter,
-Return, Tab, Esc, Escape, Backspace, the arrow keys, Space, and Herdr's named
-punctuation: `minus`, `comma`, `period`, `slash`, `backslash`, `quote`,
-`double_quote`, `double-quote`, `semicolon`, `colon`, `percent`, `ampersand`,
-`backtick`, and `plus`. Equivalent single-character ASCII punctuation is also
-supported inside prefix sequences or modified chords.
+Supported keys include ASCII letters and digits, F1 through F24, Enter, Tab,
+Escape, Backspace, arrows, Space, and Herdr's named punctuation. Hyper,
+indexed ranges such as `1..9`, non-ASCII keys, and unmodified direct printable
+keys are not supported. Invalid or unsupported values fail closed with
+`CUSTOM KEYS` instead of sending a guessed sequence.
 
-Unmodified direct printable bindings, `hyper`, indexed ranges such as `1..9`,
-non-ASCII keys, invalid TOML, unreadable files, and values with unsupported
-types fail closed with `CUSTOM KEYS`. Alt, Cmd/Super, and punctuation behavior
-can still depend on the terminal, tmux configuration, and keyboard layout;
-non-US layouts are not currently claimed. After editing Herdr's config, reload
-Herdr with `herdr server reload-config` or restart it. Herdr Control notices the
-file change automatically.
+After editing the Herdr configuration, run `herdr server reload-config` or
+restart Herdr. Herdr Control notices saved file changes automatically.
 
-Workspace and tab creation and cycling, pane navigation and layout controls, agent focus, Detach, and Back continue to use Herdr CLI or plugin-owned behavior. Native built-in action invocation is being discussed upstream in [herdr#1624](https://github.com/herdrdev/herdr/discussions/1624).
+## macOS permissions
 
-### First-run macOS permissions
+Spaces, Settings, Sidebar, Rename, and Close send Herdr key commands through
+macOS System Events. Enable these entries for the Stream Deck app:
 
-Spaces, Settings, Sidebar, Rename, and Close send Herdr key commands through macOS System Events. Enable both of these entries for the Stream Deck app:
+1. **System Settings → Privacy & Security → Accessibility → Elgato Stream
+   Deck**
+2. **System Settings → Privacy & Security → Automation → Elgato Stream Deck →
+   System Events**
 
-1. **System Settings → Privacy & Security → Accessibility → Elgato Stream Deck**
-2. **System Settings → Privacy & Security → Automation → Elgato Stream Deck → System Events**
+If an action displays `ALLOW ACCESS`, enable **Elgato Stream Deck** in the
+Accessibility pane that opens. If it displays `ALLOW AUTOMATION`, enable
+**System Events** under Elgato Stream Deck in Automation.
 
-If a protected action displays `ALLOW ACCESS`, Herdr Control opens the Accessibility pane. Enable **Elgato Stream Deck**, then press the action again. If it displays `ALLOW AUTOMATION`, enable **System Events** under the Stream Deck entry in the Automation pane.
+Terminal.app and iTerm2 may request an additional Automation grant when Herdr
+Control focuses or closes their windows. Enable the affected terminal under
+the Stream Deck Automation entry. Quit and reopen Stream Deck after changing a
+permission if the action still fails, especially after a macOS upgrade.
 
-Terminal.app and iTerm2 may request an additional Automation grant when Herdr Control focuses or closes their windows. Enable the affected terminal under **System Settings → Privacy & Security → Automation → Elgato Stream Deck**. If macOS retains a stale denial, quit and reopen Stream Deck after changing the permission.
+## Troubleshooting
 
-### Upgrades and uninstall
+Stream Deck shows its red exclamation mark when an action fails. Herdr Control
+also uses temporary key titles for known prerequisites:
 
-Installing a newer package updates the plugin in place and preserves existing profiles and action settings. Uninstalling from Stream Deck Preferences removes the plugin bundle but leaves imported Herdr profiles and configured keys in place. Those keys remain unavailable until the plugin is reinstalled or the actions are removed manually.
+| Key title | What to do |
+| --- | --- |
+| `INSTALL HERDR` | Install Herdr in one of the supported locations below. |
+| `INSTALL <TERMINAL>` | Install the selected terminal or choose another terminal on the Open Herdr key. |
+| `NO TERMINAL` | Install a supported terminal or choose an installed one instead of Auto. |
+| `ALLOW ACCESS` | Enable Elgato Stream Deck in macOS Accessibility. |
+| `ALLOW AUTOMATION` | Enable System Events under Elgato Stream Deck in macOS Automation. |
+| `CUSTOM KEYS` | Correct the Herdr TOML file or use a binding from the supported subset. |
 
-Accessibility and Automation grants belong to the Stream Deck app, not the Herdr Control plugin, so uninstalling the plugin does not remove them.
+If the profiles are missing, follow
+[the manual profile import steps](#if-the-bundled-profiles-do-not-appear).
 
-## Development
+Detailed failures are written to:
 
-Run the validation suite with:
+```text
+~/Library/Application Support/com.elgato.StreamDeck/Plugins/com.so1omon563.herdr-control.sdPlugin/logs/
+```
+
+### Supported locations
+
+Herdr Control looks for `herdr` at:
+
+- `/opt/homebrew/bin/herdr`
+- `/usr/local/bin/herdr`
+- `~/.local/bin/herdr`
+- `~/.cargo/bin/herdr`
+
+Supported terminal application locations are:
+
+- Ghostty: `/Applications/Ghostty.app` or `~/Applications/Ghostty.app`
+- kitty: `/Applications/kitty.app` or `~/Applications/kitty.app`
+- iTerm2: `iTerm.app` or `iTerm2.app` under `/Applications` or
+  `~/Applications`
+- Terminal.app: `/System/Applications/Utilities/Terminal.app` or
+  `/Applications/Utilities/Terminal.app`
+
+## Known limitations
+
+- Herdr 0.8.2 does not expose client navigation mode. Spaces tracks picker
+  opens and closes initiated through Herdr Control. Dismissing the picker from
+  Herdr's keyboard can leave the toggle out of sync until the Stream Deck
+  plugin restarts.
+- Alt, Cmd/Super, and punctuation behavior can depend on the terminal, tmux
+  configuration, and keyboard layout. Non-US layouts are not currently
+  claimed.
+- Other Stream Deck models have not been tested.
+- Native built-in action invocation is under discussion in
+  [herdr#1624](https://github.com/herdrdev/herdr/discussions/1624).
+
+## Upgrades and uninstall
+
+Double-clicking a newer `.streamDeckPlugin` package updates Herdr Control in
+place and preserves imported profiles and action settings.
+
+Uninstalling Herdr Control from Stream Deck Preferences removes the plugin but
+leaves imported profiles and configured keys. Those keys remain unavailable
+until the plugin is reinstalled or the actions are removed manually.
+Accessibility and Automation grants also remain because they belong to the
+Stream Deck app, not this plugin.
+
+## Support and development
+
+Use the [support matrix](docs/SUPPORT.md) for exact test evidence and current
+support boundaries. Report reproducible bugs through
+[GitHub Issues](https://github.com/so1omon563/herdr-control-stream-deck/issues).
+
+Contributors can run:
 
 ```sh
 npm ci
@@ -129,22 +273,19 @@ npm test
 npm run validate:streamdeck
 ```
 
-Create a local `.streamDeckPlugin` installer with `npm run pack:streamdeck`.
-This packages the plugin but does not install or publish it.
+Create a local installer with `npm run pack:streamdeck`. This packages the
+plugin but does not install or publish it. See
+[Development](docs/DEVELOPMENT.md), [Releasing](docs/RELEASING.md), and the
+[Roadmap](docs/ROADMAP.md) for maintainer details.
 
-See [docs/DEVELOPMENT.md](docs/DEVELOPMENT.md) for the repository layout,
-[docs/SUPPORT.md](docs/SUPPORT.md) for the tested environment, and
-[docs/ROADMAP.md](docs/ROADMAP.md) for the release blockers.
-
-## License
+## License and identity
 
 Herdr Control is available under the [MIT License](LICENSE).
-
-## Project identity
 
 - Product: **Herdr Control**
 - Repository: `herdr-control-stream-deck`
 - Plugin UUID: `com.so1omon563.herdr-control`
 - Author: `so1omon563`
 
-Herdr Control is an independent integration and is not affiliated with Herdr or Elgato. Herdr and Stream Deck are trademarks of their respective owners.
+Herdr Control is an independent integration and is not affiliated with Herdr
+or Elgato. Herdr and Stream Deck are trademarks of their respective owners.

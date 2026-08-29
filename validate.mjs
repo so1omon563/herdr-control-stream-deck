@@ -47,6 +47,29 @@ assert.equal(packageLock.version, packageManifest.version);
 assert.equal(packageLock.packages[""].version, packageManifest.version);
 assert.equal(packageManifest.license, "MIT");
 assert.equal(packageManifest.dependencies["smol-toml"], "1.7.1");
+const readme = readFileSync(join(root, "README.md"), "utf8");
+const releaseAsset = `Herdr-Control-v${packageManifest.version}.streamDeckPlugin`;
+const releaseUrl = `https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v${packageManifest.version}/${releaseAsset}`;
+assert.ok(readme.includes(releaseUrl), "README is missing the current GitHub installer link");
+assert.ok(readme.includes(`${releaseUrl}.sha256`), "README is missing the current GitHub checksum link");
+for (const requiredHeading of [
+  "## Install from GitHub",
+  "## First use",
+  "## Everyday controls",
+  "## Configuration",
+  "## macOS permissions",
+  "## Troubleshooting",
+  "## Upgrades and uninstall"
+]) {
+  assert.ok(readme.includes(requiredHeading), `README is missing ${requiredHeading}`);
+}
+assert.match(readme, /not yet available through Elgato Marketplace/i);
+assert.doesNotMatch(readme, /not ready for public installation/i);
+for (const match of readme.matchAll(/\]\(([^)#]+)(?:#[^)]+)?\)/g)) {
+  const link = match[1];
+  if (/^(?:https?:|mailto:)/.test(link)) continue;
+  assert.ok(existsSync(join(root, link)), `README local link does not exist: ${link}`);
+}
 const license = readFileSync(join(root, "LICENSE"), "utf8");
 assert.equal(readFileSync(join(plugin, "LICENSE"), "utf8"), license);
 assert.match(license, /Copyright \(c\) 2026 Jedidiah Foster/);

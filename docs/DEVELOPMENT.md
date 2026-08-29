@@ -114,6 +114,18 @@ The personal package was clean-installed with Stream Deck 7.5.0 (22885) on a
 Both bundled profiles installed for their intended devices, and the existing
 default profiles remained intact.
 
+The direct GitHub distribution path was separately validated from the
+published `v0.1.0` release asset on 2026-08-29. After the installed plugin and
+both Herdr profiles were removed, the freshly downloaded installer passed its
+published SHA-256 checksum,
+`c0e9f973a576be46dc1b3c396c0e8503be3b05954747998d11314599d3d09ae2`,
+and was opened directly without repository or npm tooling. Stream Deck
+installed version `0.1.0.0` and automatically imported both v3 profiles with
+their correct device targets. Representative hardware smoke tests passed on
+the 15-key deck and Stream Deck+: Open Herdr and profile switching, workspace,
+tab, and pane navigation, Spaces open and close, agent focus, and Back. The
+Plus pass also covered all four dials and agent-dial focus.
+
 An early clean-install test exposed an unsupported `1.1` profile format in the
 15-key archive. Later testing found that a legacy `1.0` archive with nested
 `.sdProfile` child bundles caused the predefined-profile installer to loop,

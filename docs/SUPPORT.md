@@ -23,6 +23,22 @@ not evidence that every intermediate version has been tested.
 | Stream Deck+ (`20GBD9901`) | `HERDR Plus` | The personal plugin profile clean-installed successfully. The More folder, all four resize directions, Settings, and Sidebar passed hardware tests with their final icons. The shared Spaces action passed an open, close, open, close toggle sequence. The Agents folder passed empty, two-agent, and six-agent tests; four-slot pagination displayed pages `1/2` and `2/2`, navigation worked, agent keys focused the correct panes, and unused controls rendered fully off. The agent dial continued to report and focus the selected agent. The Pane dial created and focused both side-by-side and stacked panes from a single-pane tab, changed its hint to Zoom with multiple panes, and toggled zoom. Rename and Close retain prototype hardware coverage. |
 | Other Stream Deck models | None | No support claim. Additional device sizes remain untested. |
 
+### GitHub release installation evidence
+
+On 2026-08-29, the published `v0.1.0` GitHub installer and checksum were
+downloaded fresh after removing the installed plugin and both Herdr profiles.
+The checksum verified, the package installed as
+`com.so1omon563.herdr-control` version `0.1.0.0`, and Stream Deck automatically
+imported both v3 profiles with their correct model targets.
+
+On the connected 15-key deck, Open Herdr switched to the clean-installed
+`HERDR` profile. Workspace, tab, and pane navigation, the More and Spaces
+open/close path, agent focus, and Back passed. After switching hardware, the
+Stream Deck+ Open Herdr path selected `HERDR Plus`; all four dials, agent dial
+focus, More and Spaces, agent-folder focus, and Back passed. This evidence
+covers installation and representative core use from the public release asset,
+not every action on either profile.
+
 The model codes above identify the two profile targets used during testing.
 They do not imply support for every device with a similar key count or layout.
 
