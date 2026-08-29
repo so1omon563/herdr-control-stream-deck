@@ -2,16 +2,20 @@
 
 import { copyFile, mkdir, readFile, writeFile } from "node:fs/promises";
 import { readFileSync } from "node:fs";
-import { spawnSync } from "node:child_process";
 import { createHash } from "node:crypto";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
+import { Resvg } from "@resvg/resvg-js";
+import * as fontkit from "fontkit";
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), "..");
 const outputDir = path.join(root, "marketplace", "concepts");
 const exportDir = path.join(root, "marketplace", "exports");
 const imageDir = path.join(root, "plugin", "com.so1omon563.herdr-control.sdPlugin", "images");
+const fontDir = path.join(root, "node_modules", "@fontsource", "inter", "files");
 const assetCache = new Map();
+const fontCache = new Map();
+let iconClipId = 0;
 const touchStripAspect = 108 / 14;
 
 const colors = {
@@ -56,12 +60,16 @@ const keyPlus = [
   ["back", "BACK"],
 ];
 
-function esc(value) {
-  return String(value)
-    .replaceAll("&", "&amp;")
-    .replaceAll("<", "&lt;")
-    .replaceAll(">", "&gt;")
-    .replaceAll('"', "&quot;");
+function fontForWeight(weight) {
+  if (!fontCache.has(weight)) {
+    const fontPath = path.join(fontDir, `inter-latin-${weight}-normal.woff`);
+    fontCache.set(weight, fontkit.openSync(fontPath));
+  }
+  return fontCache.get(weight);
+}
+
+function number(value) {
+  return Number(value.toFixed(4));
 }
 
 function text(x, y, value, size, options = {}) {
@@ -72,7 +80,21 @@ function text(x, y, value, size, options = {}) {
     tracking = 0,
     opacity = 1,
   } = options;
-  return `<text x="${x}" y="${y}" fill="${fill}" font-family="Arial, Helvetica, sans-serif" font-size="${size}" font-weight="${weight}" text-anchor="${anchor}" letter-spacing="${tracking}" opacity="${opacity}">${esc(value)}</text>`;
+  const font = fontForWeight(weight);
+  const run = font.layout(String(value));
+  const scale = size / font.unitsPerEm;
+  const width = run.positions.reduce((total, position) => total + position.xAdvance * scale, 0)
+    + Math.max(0, run.glyphs.length - 1) * tracking;
+  const startX = anchor === "middle" ? x - width / 2 : anchor === "end" ? x - width : x;
+  let cursor = 0;
+  const paths = run.glyphs.map((glyph, index) => {
+    const position = run.positions[index];
+    const glyphX = startX + cursor + position.xOffset * scale;
+    const glyphY = y - position.yOffset * scale;
+    cursor += position.xAdvance * scale + (index === run.glyphs.length - 1 ? 0 : tracking);
+    return `<path d="${glyph.path.toSVG()}" transform="translate(${number(glyphX)} ${number(glyphY)}) scale(${number(scale)} ${number(-scale)})"/>`;
+  });
+  return `<g fill="${fill}" opacity="${opacity}">${paths.join("")}</g>`;
 }
 
 function multiline(x, y, lines, size, options = {}) {
@@ -84,7 +106,9 @@ function multiline(x, y, lines, size, options = {}) {
 }
 
 function icon(name, x, y, size) {
-  return `<image href="${assetUri(name, "svg")}" x="${x}" y="${y}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet"/>`;
+  const clipId = `icon-clip-${iconClipId}`;
+  iconClipId += 1;
+  return `<g><clipPath id="${clipId}"><rect x="${x}" y="${y}" width="${size}" height="${size}"/></clipPath><image href="${assetUri(name, "svg")}" x="${x}" y="${y}" width="${size}" height="${size}" preserveAspectRatio="xMidYMid meet" clip-path="url(#${clipId})"/></g>`;
 }
 
 function logo(x, y, size) {
@@ -217,6 +241,17 @@ function svgDocument(background, body) {
   return `<svg xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" width="1920" height="960" viewBox="0 0 1920 960">${defs()}${background}${body}</svg>\n`;
 }
 
+async function render(svg, outputPath, width, height) {
+  const rendered = new Resvg(svg, {
+    fitTo: { mode: "width", value: width },
+    font: { loadSystemFonts: false },
+  }).render();
+  if (rendered.width !== width || rendered.height !== height) {
+    throw new Error(`Rendered ${path.basename(outputPath)} at ${rendered.width}x${rendered.height}; expected ${width}x${height}`);
+  }
+  await writeFile(outputPath, rendered.asPng());
+}
+
 function conceptControlSurface() {
   const background = `<rect width="1920" height="960" fill="url(#darkSweep)"/><rect width="1920" height="960" fill="url(#grid)"/><ellipse cx="1400" cy="500" rx="670" ry="540" fill="url(#cyanBloom)"/>`;
   const body = [
@@ -288,17 +323,13 @@ await mkdir(outputDir, { recursive: true });
 await mkdir(exportDir, { recursive: true });
 
 for (const [name, svg] of concepts) {
+  if (/<text\b/.test(svg) || /font-family=/.test(svg)) {
+    throw new Error(`${name}.svg contains renderer-dependent text instead of pinned glyph paths`);
+  }
   const svgPath = path.join(outputDir, `${name}.svg`);
   const pngPath = path.join(outputDir, `${name}.png`);
   await writeFile(svgPath, svg, "utf8");
-  const result = spawnSync("rsvg-convert", ["--width", "1920", "--height", "960", "--output", pngPath, svgPath], {
-    cwd: root,
-    encoding: "utf8",
-  });
-  if (result.status !== 0) {
-    process.stderr.write(result.stderr || result.stdout || `Failed to render ${name}\n`);
-    process.exit(result.status || 1);
-  }
+  await render(svg, pngPath, 1920, 960);
 }
 
 const appIconSvg = svgDocument(
@@ -308,14 +339,7 @@ const appIconSvg = svgDocument(
 const appIconSource = path.join(outputDir, "app-icon.svg");
 const appIconOutput = path.join(exportDir, "app-icon.png");
 await writeFile(appIconSource, appIconSvg, "utf8");
-const appIconResult = spawnSync("rsvg-convert", ["--width", "288", "--height", "288", "--output", appIconOutput, appIconSource], {
-  cwd: root,
-  encoding: "utf8",
-});
-if (appIconResult.status !== 0) {
-  process.stderr.write(appIconResult.stderr || appIconResult.stdout || "Failed to render app icon\n");
-  process.exit(appIconResult.status || 1);
-}
+await render(appIconSvg, appIconOutput, 288, 288);
 
 const finalAssets = [
   { file: "app-icon.png", purpose: "Marketplace app icon", source: "plugin/com.so1omon563.herdr-control.sdPlugin/images/plugin@2x.png", width: 288, height: 288 },

@@ -20,6 +20,7 @@ const expected = new Map([
 if (manifest.version !== 1) {
   throw new Error(`Unsupported Marketplace manifest version: ${manifest.version}`);
 }
+
 if (!Array.isArray(manifest.assets) || manifest.assets.length !== expected.size) {
   throw new Error(`Expected ${expected.size} Marketplace assets in the manifest`);
 }

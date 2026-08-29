@@ -20,7 +20,9 @@ light Profile Parity contrast.
 
 ## Build and validate
 
-Rendering requires `rsvg-convert` from librsvg.
+Rendering uses the exact-pinned Node.js renderer and Inter font sources from
+the development dependencies. Text is converted to SVG glyph paths before
+rendering, so the exports do not depend on fonts installed on the host.
 
 ```sh
 npm run build:marketplace
@@ -29,7 +31,9 @@ npm run validate:marketplace
 
 The build regenerates the concept SVG and PNG files, final exports, and the
 SHA-256 export manifest. Validation checks the PNG signatures, exact required
-dimensions, complete asset inventory, manifest dimensions, and checksums.
+dimensions, complete asset inventory, manifest dimensions, checksums, and the
+absence of renderer-dependent SVG text. CI rebuilds the full media set and
+requires the committed files to remain byte-for-byte unchanged.
 
 See [PROVENANCE.md](PROVENANCE.md) for source and ownership details and
 [CAPTURE.md](CAPTURE.md) for the later demonstration-video plan.

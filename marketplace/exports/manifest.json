@@ -7,7 +7,7 @@
       "source": "plugin/com.so1omon563.herdr-control.sdPlugin/images/plugin@2x.png",
       "width": 288,
       "height": 288,
-      "sha256": "a8ee595f32141ddd0556f5b3f5b01c51959029cb4f25c8ba131e19f67b355414"
+      "sha256": "169dd2284919af6e898be5e907228998d320fd7b91d1c547e698fd32297fe975"
     },
     {
       "file": "thumbnail.png",
@@ -15,7 +15,7 @@
       "source": "marketplace/concepts/01-control-surface.svg",
       "width": 1920,
       "height": 960,
-      "sha256": "e122f1a328347705b17edb6f7f6a30d7c8cd9128ee1b1480a517b3e710b00dab"
+      "sha256": "e8e77ecca17848b75df440794a4dd0b0214e2da9c5ee8f73d47ebbbeec761782"
     },
     {
       "file": "gallery-01-dial-focus.png",
@@ -23,7 +23,7 @@
       "source": "marketplace/concepts/02-dial-focus.svg",
       "width": 1920,
       "height": 960,
-      "sha256": "6f93cbc7480665cba32e4cb3b0e02c78463678bbd9f1356f4d996f39d59de1bf"
+      "sha256": "0e44bfaa2f3e0b0278d1d464b7ac8e066df30bf05b5fc6de29ed7ae644204de8"
     },
     {
       "file": "gallery-02-profile-parity.png",
@@ -31,7 +31,7 @@
       "source": "marketplace/concepts/03-profile-parity.svg",
       "width": 1920,
       "height": 960,
-      "sha256": "6beeb842a800064c25c6acae9657b2ec58c5dbb3f06d02b396dcff58c4c22dce"
+      "sha256": "c2b8de7ad0478f259dc4d509b0fe40ca27592340befbc75cba4ee31916b4e08a"
     },
     {
       "file": "gallery-03-agent-focus.png",
@@ -39,7 +39,7 @@
       "source": "marketplace/concepts/04-agent-focus.svg",
       "width": 1920,
       "height": 960,
-      "sha256": "5cf11cde597c5dec9dd35372f0b4c323d50bee2482de22c1f5deda2e46e351c5"
+      "sha256": "20b42d2f0986479da371ff4ba4003fd7e7affa1e6aabfbdda58aee85f751fb0c"
     }
   ]
 }

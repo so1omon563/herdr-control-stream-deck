@@ -24,9 +24,11 @@
 
 ## Typography and generation
 
-- Text uses the system Arial/Helvetica fallback stack. No font files are
-  redistributed.
+- Text uses exact-pinned Inter font sources from `@fontsource/inter` under the
+  SIL Open Font License 1.1. The build converts every glyph to an SVG path, so
+  no host font or font file is present in the final media.
 - `scripts/build-marketplace-concepts.mjs` deterministically composes and
-  renders every final image from repository-owned source artwork.
+  renders every final image from repository-owned source artwork with the
+  exact-pinned `fontkit` and `@resvg/resvg-js` build dependencies.
 - No generative image model, stock image, external logo, user terminal content,
   or fabricated application screenshot appears in the final exports.
