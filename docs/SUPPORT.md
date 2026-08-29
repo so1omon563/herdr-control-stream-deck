@@ -13,6 +13,7 @@ not evidence that every intermediate version has been tested.
 | Herdr | 0.8.2 | 0.8.2 | This is the only Herdr version covered by the current CLI, socket-schema, keybinding, and hardware evidence. |
 | Node.js runtime | A compatible runtime must be available from Homebrew, `/usr/local`, `PATH`, or Stream Deck | 20.20.0, 22.22.3, and 24.13.1 | The full validation suite passes on all three exact versions. Development tooling requires Node.js 20.1 or later. |
 | Stream Deck CLI | Development only | 1.9.0 | The repository pins this version for validation and packaging. End users do not run the CLI. |
+| TOML parser | Packaged runtime dependency | smol-toml 1.7.1 | The exact CommonJS parser and BSD 3-Clause license are bundled in the plugin. Repository validation requires the vendored files to match the pinned dependency. |
 
 ## Hardware
 
@@ -46,5 +47,7 @@ support-matrix pass.
 - Herdr versions other than 0.8.2.
 - Stream Deck software versions before 7.5.0 as physically tested versions.
 - Stream Deck models other than the tested 15-key device and Stream Deck+.
-- Automatic execution of custom Herdr bindings for Spaces, Settings, Sidebar,
-  Rename, and Close.
+- Custom keybinding forms outside the documented safe subset, including Hyper,
+  indexed ranges, non-ASCII keys, and unmodified direct printable keys.
+- Reliable punctuation or Alt/Cmd/Super behavior across non-US keyboard
+  layouts and every terminal or tmux configuration.

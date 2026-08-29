@@ -1,7 +1,8 @@
 const { execFile } = require("node:child_process");
-const { existsSync, readFileSync } = require("node:fs");
+const { existsSync } = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
+const { appleScriptKeyLine, commandKeySequence } = require("./keybindings.js");
 
 const TOGGLE_UUID = "com.so1omon563.herdr-control.toggle";
 const COMMAND_UUID = "com.so1omon563.herdr-control.command";
@@ -166,96 +167,6 @@ function commandPresentation(settings = {}, state) {
 
 function errorRestoreTitle(info, originalTitle) {
   return info?.action === COMMAND_UUID ? (info.commandTitle ?? commandPresentation(info.settings).title) : originalTitle;
-}
-
-const HERDR_PREFIX_COMMANDS = {
-  "settings": [1, false],
-  "rename-workspace": [13, true],
-  "rename-tab": [17, true],
-  "rename-pane": [35, true],
-  "close-workspace": [2, true],
-  "close-tab": [7, true],
-  "close-pane": [7, false]
-};
-
-const HERDR_CONFIG_BINDINGS = {
-  "settings": "settings",
-  "workspace-picker": "workspace_picker",
-  "sidebar": "toggle_sidebar",
-  "rename-workspace": "rename_workspace",
-  "rename-tab": "rename_tab",
-  "rename-pane": "rename_pane",
-  "close-workspace": "close_workspace",
-  "close-tab": "close_tab",
-  "close-pane": "close_pane"
-};
-function prefixCommand(command) {
-  return HERDR_PREFIX_COMMANDS[command] ?? null;
-}
-
-function herdrConfigPath() {
-  return process.env.HERDR_CONFIG_PATH?.trim()
-    || path.join(os.homedir(), ".config", "herdr", "config.toml");
-}
-
-function tomlAssignment(line) {
-  return line.match(/^([A-Za-z0-9_-]+)\s*=/)?.[1]
-    ?? line.match(/^["']([^"']+)["']\s*=/)?.[1]
-    ?? null;
-}
-
-function tomlName(value) {
-  return value.match(/^["']([^"']+)["']$/)?.[1] ?? value;
-}
-
-function bindingOverride(command, source) {
-  const binding = HERDR_CONFIG_BINDINGS[command];
-  if (!binding) return null;
-  let section = "";
-
-  for (const line of source.split(/\r?\n/)) {
-    const value = line.trim();
-    if (!value || value.startsWith("#")) continue;
-
-    const arrayTable = value.match(/^\[\[\s*([^\]]+?)\s*\]\](?:\s*#.*)?$/);
-    if (arrayTable) {
-      section = tomlName(arrayTable[1]);
-      continue;
-    }
-    const table = value.match(/^\[\s*([^\]]+?)\s*\](?:\s*#.*)?$/);
-    if (table) {
-      section = tomlName(table[1]);
-      continue;
-    }
-
-    if (!section) {
-      if (/^(?:keys|["']keys["'])\s*=/.test(value)) {
-        return "keys";
-      }
-      const dotted = value.match(/^(?:keys|["']keys["'])\.(?:([A-Za-z0-9_-]+)|["']([^"']+)["'])\s*=/);
-      const name = dotted?.[1] ?? dotted?.[2];
-      if (name === "prefix" || name === binding) return name;
-      continue;
-    }
-
-    if (section === "keys") {
-      const name = tomlAssignment(value);
-      if (name === "prefix" || name === binding) return name;
-    }
-  }
-
-  return null;
-}
-
-function activeBindingOverride(command) {
-  if (!HERDR_CONFIG_BINDINGS[command]) return null;
-  const config = herdrConfigPath();
-  if (!existsSync(config)) return null;
-  try {
-    return bindingOverride(command, readFileSync(config, "utf8"));
-  } catch {
-    return "config";
-  }
 }
 
 function argument(name) {
@@ -734,22 +645,22 @@ function agentKeyPresentation(state, settings, page = 0) {
   };
 }
 
-async function sendPrefixKey(keyCode, shift = false) {
+async function sendKeySequence(sequence) {
   const client = await attachedClient();
   if (!client) throw new Error("HERDR client is not attached");
   await focusClient(client);
+  const keyLines = sequence.flatMap((chord, index) => (
+    index + 1 < sequence.length
+      ? [appleScriptKeyLine(chord), "delay 0.08"]
+      : [appleScriptKeyLine(chord)]
+  ));
   const script = [
-    "on run argv",
-    "set commandKeyCode to (item 1 of argv) as integer",
     'tell application "System Events"',
     "delay 0.1",
-    "key code 11 using control down",
-    "delay 0.08",
-    shift ? "key code commandKeyCode using shift down" : "key code commandKeyCode",
+    ...keyLines,
     "end tell",
-    "end run"
   ].join("\n");
-  await run("/usr/bin/osascript", ["-e", script, String(keyCode)]);
+  await run("/usr/bin/osascript", ["-e", script]);
 }
 
 function paneCycleTarget(state, command) {
@@ -808,16 +719,8 @@ async function cyclePane(command, state) {
 }
 
 async function executeCommand(command, settings = {}) {
-  const overriddenBinding = activeBindingOverride(command);
-  if (overriddenBinding) {
-    const error = new Error(`HERDR keybinding ${overriddenBinding} is explicitly configured`);
-    error.code = "HERDR_CUSTOM_KEYBINDING";
-    throw error;
-  }
-  if (command === "workspace-picker") return sendPrefixKey(13);
-  if (command === "sidebar") return sendPrefixKey(11);
-  const prefix = prefixCommand(command);
-  if (prefix) return sendPrefixKey(...prefix);
+  const keySequence = commandKeySequence(command);
+  if (keySequence) return sendKeySequence(keySequence);
   if (command === "detach") {
     const client = await attachedClient();
     if (!client) throw new Error("HERDR client is not attached");
@@ -1369,5 +1272,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, prefixCommand, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds };
+module.exports = { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds };
 if (require.main === module) connectPlugin();
