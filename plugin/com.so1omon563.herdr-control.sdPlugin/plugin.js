@@ -291,6 +291,18 @@ function clientKey(client) {
   return `${client.terminal}:${client.id}`;
 }
 
+function workspacePickerPruneTerminals(preference, trackedClientKeys) {
+  const selectedTerminals = new Set(terminalIds(preference));
+  const terminals = new Set();
+  for (const key of trackedClientKeys) {
+    const terminal = key.slice(0, key.indexOf(":"));
+    if (TERMINAL_ORDER.includes(terminal) && !selectedTerminals.has(terminal)) {
+      terminals.add(terminal);
+    }
+  }
+  return [...terminals];
+}
+
 async function frontmostProcessPid() {
   const script = 'tell application "System Events" to unix id of first application process whose frontmost is true';
   return run("/usr/bin/osascript", ["-e", script], 5000);
@@ -973,6 +985,11 @@ async function syncHerdrProfile(clients) {
 async function refresh(force = false) {
   const clients = await attachedClients();
   const attachedClientKeys = new Set(clients.map(clientKey));
+  for (const terminal of workspacePickerPruneTerminals(terminalPreference, workspacePickerOpenClients)) {
+    for (const client of await clientsForTerminal(terminal)) {
+      attachedClientKeys.add(clientKey(client));
+    }
+  }
   for (const key of workspacePickerOpenClients) {
     if (!attachedClientKeys.has(key)) workspacePickerOpenClients.delete(key);
   }
@@ -1307,5 +1324,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerSequence };
+module.exports = { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence };
 if (require.main === module) connectPlugin();
