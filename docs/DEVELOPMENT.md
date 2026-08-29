@@ -7,6 +7,8 @@
 - `plugin/com.so1omon563.herdr-control.sdPlugin/vendor/`: packaged runtime parser and third-party license.
 - `profile/`: unpacked 15-key profile source.
 - `profile-plus/`: unpacked Stream Deck+ profile source.
+- `scripts/check-release.mjs`: release version and packaged-manifest contract.
+- `scripts/check-next-version.mjs`: pre-tag marker and next-version contract.
 - `validate.mjs`: validation and regression checks.
 
 ## Validate
@@ -92,6 +94,17 @@ The command validates the plugin and writes
 `dist/com.so1omon563.herdr-control.streamDeckPlugin`, replacing an existing
 local artifact. The plugin's `.sdignore` excludes Finder metadata. Packaging
 does not install, publish, or submit the plugin.
+
+For a versioned installer and SHA-256 checksum, use the matching repository
+version and numeric SemVer tag:
+
+```sh
+npm run build:release -- v0.1.0
+```
+
+This remains a local build. The marker-driven GitHub workflow, authorization
+boundary, version contract, and existing-tag recovery path are documented in
+[`RELEASING.md`](RELEASING.md).
 
 ## Clean-install validation
 

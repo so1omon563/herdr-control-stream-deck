@@ -4,6 +4,12 @@ import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "no
 import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import {
+  assertNextVersion,
+  bumpFromMessage,
+  expectedReleaseVersion,
+  highestStableVersion
+} from "./scripts/check-next-version.mjs";
 
 const require = createRequire(import.meta.url);
 const root = new URL(".", import.meta.url).pathname;
@@ -35,6 +41,10 @@ const icons = [
 const dialIcons = ["dial-workspace.svg", "dial-tab.svg", "dial-pane.svg", "dial-agent.svg"];
 
 const packageManifest = JSON.parse(readFileSync(join(root, "package.json")));
+const packageLock = JSON.parse(readFileSync(join(root, "package-lock.json")));
+assert.match(packageManifest.version, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/);
+assert.equal(packageLock.version, packageManifest.version);
+assert.equal(packageLock.packages[""].version, packageManifest.version);
 assert.equal(packageManifest.license, "MIT");
 assert.equal(packageManifest.dependencies["smol-toml"], "1.7.1");
 const license = readFileSync(join(root, "LICENSE"), "utf8");
@@ -53,7 +63,7 @@ for (const [vendored, installed] of [
 }
 
 const pluginManifest = JSON.parse(readFileSync(join(plugin, "manifest.json")));
-assert.equal(pluginManifest.Version, "0.1.0.0");
+assert.equal(pluginManifest.Version, `${packageManifest.version}.0`);
 assert.equal(pluginManifest.UUID, "com.so1omon563.herdr-control");
 assert.equal(pluginManifest.Author, "so1omon563");
 const toggleAction = pluginManifest.Actions.find(item => item.UUID === "com.so1omon563.herdr-control.toggle");
@@ -66,6 +76,48 @@ for (const uuid of ["com.so1omon563.herdr-control.back", "com.so1omon563.herdr-c
   assert.equal(pluginManifest.Actions.find(item => item.UUID === uuid).VisibleInActionsList, false);
 }
 assert.deepEqual(pluginManifest.Profiles.map(item => item.DeviceType), [0, 7]);
+
+const releaseWorkflow = readFileSync(join(root, ".github/workflows/release.yml"), "utf8");
+for (const requiredText of [
+  "workflow_dispatch:",
+  "uses: so1omon563/custom-semver-bumper@v1",
+  "default_bump: none",
+  "node scripts/check-next-version.mjs",
+  "node scripts/check-release.mjs \"$NEW_TAG\"",
+  "needs.bump-version.outputs.release_requested == 'true'",
+  "ref: ${{ env.RELEASE_TAG }}",
+  "npm run build:release",
+  "uses: so1omon563/release-creator@v2",
+  "dist/Herdr-Control-*.streamDeckPlugin.sha256"
+]) {
+  assert.ok(releaseWorkflow.includes(requiredText), `release workflow is missing ${requiredText}`);
+}
+assert.doesNotMatch(releaseWorkflow, /move_(major|minor)_tag:\s*['"]?true/);
+assert.doesNotMatch(releaseWorkflow, /move-(major|minor)-tag:\s*['"]?true/);
+assert.doesNotMatch(releaseWorkflow, /branch_name:/);
+assert.ok(
+  releaseWorkflow.indexOf("node scripts/check-next-version.mjs") <
+    releaseWorkflow.indexOf("uses: so1omon563/custom-semver-bumper@v1"),
+  "next-version validation must run before custom-semver-bumper creates a tag"
+);
+
+const releaseCheck = join(root, "scripts/check-release.mjs");
+execFileSync(process.execPath, [releaseCheck, `v${packageManifest.version}`]);
+assert.throws(
+  () => execFileSync(process.execPath, [releaseCheck, "v999.0.0"], { stdio: "pipe" }),
+  error => error.status !== 0
+);
+assert.equal(bumpFromMessage("Release #patch\n\nExample: #major"), "patch");
+assert.equal(bumpFromMessage("Docs\n\nPrepare #minor"), "minor");
+assert.equal(bumpFromMessage("Docs #patchwork"), null);
+assert.equal(bumpFromMessage("Release #patch #skip"), null);
+assert.equal(bumpFromMessage("Skip this\n\n#patch #skip"), null);
+assert.deepEqual(highestStableVersion(["v0.1.9", "v0.2.0", "v0.3.0-beta.1"]), [0, 2, 0]);
+assert.equal(expectedReleaseVersion(["v0.1.0"], "Release #patch"), "0.1.1");
+assert.throws(
+  () => assertNextVersion("0.2.0", ["v0.1.0"], "Release #patch"),
+  /would create v0\.1\.1, but staged package metadata is v0\.2\.0/
+);
 for (const [name, bundle, model] of [
   ["HERDR.streamDeckProfile", "2F9C9B72-92B4-4EC1-AB64-BFC50ED6CFD8.sdProfile", "20GBA9901"],
   ["HERDR Plus.streamDeckProfile", "C7A1F520-4F17-4D6E-8B87-9077A0D2F9C1.sdProfile", "20GBD9901"]
