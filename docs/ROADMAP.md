@@ -2,12 +2,15 @@
 
 ## Release blockers
 
-No unresolved local-development blockers are currently tracked. Herdr Control
-remains pre-release; Marketplace preparation and a repeatable release process
-are still required before public distribution.
+No unresolved plugin-development blockers are currently tracked. Herdr Control
+remains pre-release. The release workflow must be validated before the first
+explicitly authorized GitHub prerelease, and direct installation from that
+release must be documented and hardware-tested before Marketplace work begins.
 
 ## Later
 
 - Evaluate additional Stream Deck sizes from the same action set.
 - Add Marketplace artwork and screenshots after the interaction model is stable.
-- Add release automation only after a manual release is repeatable.
+- Complete the first authorized GitHub prerelease through the maintained
+  composite-action workflow.
+- Complete the user documentation and clean GitHub-download installation pass.

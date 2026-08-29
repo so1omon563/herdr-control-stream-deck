@@ -1,0 +1,115 @@
+name: Version Bump and Release
+
+on:
+  pull_request:
+    types: [closed]
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: Existing immutable vX.Y.Z tag to publish
+        required: true
+        type: string
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+permissions:
+  contents: read
+
+jobs:
+  bump-version:
+    if: github.event_name == 'pull_request' && github.event.pull_request.merged == true
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      new_tag: ${{ steps.bump.outputs.new_version }}
+      skipped: ${{ steps.bump.outputs.skipped }}
+      release_requested: ${{ steps.bump.outputs.should_release }}
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Validate staged release metadata
+        run: node scripts/check-release.mjs
+
+      - name: Bump version tag
+        id: bump
+        uses: so1omon563/custom-semver-bumper@v1
+        with:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          branch_name: ${{ github.event.pull_request.head.ref }}
+          default_bump: none
+          move_major_tag: 'false'
+          move_minor_tag: 'false'
+
+      - name: Verify created tag matches release metadata
+        if: steps.bump.outputs.skipped != 'true'
+        env:
+          NEW_TAG: ${{ steps.bump.outputs.new_version }}
+        run: node scripts/check-release.mjs "$NEW_TAG"
+
+  create-release:
+    name: Build and create GitHub Release
+    needs: bump-version
+    if: |
+      always() &&
+      (
+        (
+          github.event_name == 'pull_request' &&
+          needs.bump-version.result == 'success' &&
+          needs.bump-version.outputs.release_requested == 'true' &&
+          needs.bump-version.outputs.skipped != 'true'
+        ) ||
+        github.event_name == 'workflow_dispatch'
+      )
+    runs-on: macos-latest
+    permissions:
+      contents: write
+    env:
+      RELEASE_TAG: ${{ github.event_name == 'workflow_dispatch' && inputs.tag || needs.bump-version.outputs.new_tag }}
+
+    steps:
+      - name: Check out exact release tag
+        uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+          ref: ${{ env.RELEASE_TAG }}
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v7
+        with:
+          node-version: 24
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Validate package
+        run: npm test
+
+      - name: Build and verify release assets
+        run: npm run build:release -- "$RELEASE_TAG"
+
+      - name: Create GitHub Release
+        uses: so1omon563/release-creator@v2
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+          tag: ${{ env.RELEASE_TAG }}
+          tag-prefix: v
+          notes-format: grouped
+          prerelease: ${{ startsWith(env.RELEASE_TAG, 'v0.') && 'true' || 'auto' }}
+          skip-if-release-exists: ${{ github.event_name == 'workflow_dispatch' && 'true' || 'false' }}
+          move-major-tag: 'false'
+          move-minor-tag: 'false'
+          asset-paths: |
+            dist/Herdr-Control-*.streamDeckPlugin
+            dist/Herdr-Control-*.streamDeckPlugin.sha256
