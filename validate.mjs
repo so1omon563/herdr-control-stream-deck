@@ -269,11 +269,20 @@ assert.match(inspector, /Side by side \(Split Right\)/);
 assert.match(inspector, /Stacked \(Split Down\)/);
 assert.match(inspector, /action === ENCODER_UUID/);
 
-const { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
+const { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerSequence } = require(join(plugin, "plugin.js"));
 const { CONFIG_BINDINGS, DEFAULT_BINDINGS, appleScriptKeyLine, commandKeySequence, parseKeyBinding, parseKeyChord, parseKeyConfig, readKeyConfig, resetKeyConfigCache, resolveKeySequence } = require(join(plugin, "keybindings.js"));
 assert.equal(commandForSettings({}), "workspace-next");
 assert.equal(commandForSettings({ command: "unsupported" }), "workspace-next");
 assert.equal(commandForSettings({ command: "pane-primary" }), "pane-primary");
+assert.equal(clientKey({ terminal: "ghostty", id: "123" }), "ghostty:123");
+const customWorkspacePickerSequence = [
+  { keyCode: 111, modifiers: [] },
+  { keyCode: 13, modifiers: [] }
+];
+assert.equal(workspacePickerSequence(false, customWorkspacePickerSequence), customWorkspacePickerSequence);
+assert.deepEqual(workspacePickerSequence(true, customWorkspacePickerSequence), [
+  { keyCode: 53, modifiers: [] }
+]);
 assert.deepEqual(commandSettings({ custom: true }), { custom: true, command: "workspace-next" });
 assert.deepEqual(commandSettings({ command: "tab-next", custom: true }), { command: "tab-next", custom: true });
 assert.deepEqual(commandPresentation({ command: "split-right" }), {

@@ -16,6 +16,7 @@ Herdr Control brings workspace, tab, pane, and agent navigation from [Herdr](htt
 - Open Herdr-native Settings, Rename, and Close interactions.
 - Respect common custom Herdr prefixes and bindings for Spaces, Settings,
   Sidebar, Rename, and Close.
+- Press Spaces again to close a workspace picker opened through Herdr Control.
 - Add configurable Herdr Command actions to custom Stream Deck profiles.
 
 Select the Pane dial or adaptive Pane key in Stream Deck to choose whether a
@@ -58,6 +59,11 @@ under `~/Library/Application Support/com.elgato.StreamDeck/Plugins/` in
 
 - Custom Herdr bindings outside the documented subset below display `CUSTOM
   KEYS` instead of sending a potentially incorrect key sequence.
+- Herdr 0.8.2 does not expose its client navigation mode. The Spaces toggle
+  therefore tracks picker opens and closes initiated through Herdr Control for
+  each attached terminal client. Dismissing the picker directly from Herdr's
+  keyboard can leave that local toggle state out of sync until the plugin is
+  restarted.
 - The current build and installation process is for development only.
 - Other Stream Deck models have not been tested yet.
 
