@@ -286,8 +286,10 @@ const customWorkspacePickerSequence = [
   { keyCode: 111, modifiers: [] },
   { keyCode: 13, modifiers: [] }
 ];
-assert.equal(workspacePickerSequence(false, customWorkspacePickerSequence), customWorkspacePickerSequence);
-assert.deepEqual(workspacePickerSequence(true, customWorkspacePickerSequence), [
+assert.equal(workspacePickerSequence(false, () => customWorkspacePickerSequence), customWorkspacePickerSequence);
+assert.deepEqual(workspacePickerSequence(true, () => {
+  throw new Error("closing must not resolve the opening binding");
+}), [
   { keyCode: 53, modifiers: [] }
 ]);
 assert.deepEqual(commandSettings({ custom: true }), { custom: true, command: "workspace-next" });

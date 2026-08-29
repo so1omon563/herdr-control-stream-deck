@@ -681,8 +681,8 @@ async function sendKeySequence(sequence, client) {
 
 const ESCAPE_KEY_SEQUENCE = [{ keyCode: 53, modifiers: [] }];
 
-function workspacePickerSequence(isOpen, openSequence) {
-  return isOpen ? ESCAPE_KEY_SEQUENCE : openSequence;
+function workspacePickerSequence(isOpen, resolveOpenSequence) {
+  return isOpen ? ESCAPE_KEY_SEQUENCE : resolveOpenSequence();
 }
 
 async function toggleWorkspacePicker() {
@@ -693,7 +693,7 @@ async function toggleWorkspacePicker() {
     if (!client) throw new Error("HERDR client is not attached");
     const key = clientKey(client);
     const isOpen = workspacePickerOpenClients.has(key);
-    const sequence = workspacePickerSequence(isOpen, commandKeySequence("workspace-picker"));
+    const sequence = workspacePickerSequence(isOpen, () => commandKeySequence("workspace-picker"));
     await sendKeySequence(sequence, client);
     if (isOpen) workspacePickerOpenClients.delete(key);
     else workspacePickerOpenClients.add(key);
