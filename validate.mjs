@@ -1,7 +1,8 @@
 import assert from "node:assert/strict";
 import { execFileSync } from "node:child_process";
-import { existsSync, readFileSync } from "node:fs";
+import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { createRequire } from "node:module";
+import { tmpdir } from "node:os";
 import { join } from "node:path";
 
 const require = createRequire(import.meta.url);
@@ -35,9 +36,21 @@ const dialIcons = ["dial-workspace.svg", "dial-tab.svg", "dial-pane.svg", "dial-
 
 const packageManifest = JSON.parse(readFileSync(join(root, "package.json")));
 assert.equal(packageManifest.license, "MIT");
+assert.equal(packageManifest.dependencies["smol-toml"], "1.7.1");
 const license = readFileSync(join(root, "LICENSE"), "utf8");
 assert.equal(readFileSync(join(plugin, "LICENSE"), "utf8"), license);
 assert.match(license, /Copyright \(c\) 2026 Jedidiah Foster/);
+for (const [vendored, installed] of [
+  ["smol-toml.cjs", "dist/index.cjs"],
+  ["smol-toml.cjs.map", "dist/index.cjs.map"],
+  ["smol-toml.LICENSE", "LICENSE"]
+]) {
+  assert.deepEqual(
+    readFileSync(join(plugin, "vendor", vendored)),
+    readFileSync(join(root, "node_modules", "smol-toml", installed)),
+    `${vendored} is not synchronized; run npm run build:vendor`
+  );
+}
 
 const pluginManifest = JSON.parse(readFileSync(join(plugin, "manifest.json")));
 assert.equal(pluginManifest.Version, "0.1.0.0");
@@ -256,7 +269,8 @@ assert.match(inspector, /Side by side \(Split Right\)/);
 assert.match(inspector, /Stacked \(Split Down\)/);
 assert.match(inspector, /action === ENCODER_UUID/);
 
-const { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, bindingOverride, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, prefixCommand, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
+const { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds } = require(join(plugin, "plugin.js"));
+const { CONFIG_BINDINGS, DEFAULT_BINDINGS, appleScriptKeyLine, commandKeySequence, parseKeyBinding, parseKeyChord, parseKeyConfig, readKeyConfig, resetKeyConfigCache, resolveKeySequence } = require(join(plugin, "keybindings.js"));
 assert.equal(commandForSettings({}), "workspace-next");
 assert.equal(commandForSettings({ command: "unsupported" }), "workspace-next");
 assert.equal(commandForSettings({ command: "pane-primary" }), "pane-primary");
@@ -338,14 +352,6 @@ for (const direction of ["left", "right", "up", "down"]) {
 }
 assert.deepEqual(paneCommandArgs("zoom", "w1:p2"), ["pane", "zoom", "--pane", "w1:p2", "--toggle"]);
 assert.deepEqual(paneCommandArgs("pane-right", "w1:p2", "down"), ["pane", "focus", "--pane", "w1:p2", "--direction", "down"]);
-assert.deepEqual(prefixCommand("rename-workspace"), [13, true]);
-assert.deepEqual(prefixCommand("rename-tab"), [17, true]);
-assert.deepEqual(prefixCommand("rename-pane"), [35, true]);
-assert.deepEqual(prefixCommand("close-workspace"), [2, true]);
-assert.deepEqual(prefixCommand("close-tab"), [7, true]);
-assert.deepEqual(prefixCommand("close-pane"), [7, false]);
-assert.deepEqual(prefixCommand("settings"), [1, false]);
-assert.equal(prefixCommand("rename"), null);
 const affectedBindings = {
   "settings": "settings",
   "workspace-picker": "workspace_picker",
@@ -357,17 +363,127 @@ const affectedBindings = {
   "close-tab": "close_tab",
   "close-pane": "close_pane"
 };
-for (const [command, binding] of Object.entries(affectedBindings)) {
-  assert.equal(bindingOverride(command, `[keys]\n${binding} = "prefix+f12"`), binding);
+assert.deepEqual(CONFIG_BINDINGS, affectedBindings);
+assert.deepEqual(DEFAULT_BINDINGS, {
+  "settings": "prefix+s",
+  "workspace-picker": "prefix+w",
+  "sidebar": "prefix+b",
+  "rename-workspace": "prefix+shift+w",
+  "rename-tab": "prefix+shift+t",
+  "rename-pane": "prefix+shift+p",
+  "close-workspace": "prefix+shift+d",
+  "close-tab": "prefix+shift+x",
+  "close-pane": "prefix+x"
+});
+const defaultActionKeyCodes = {
+  "settings": [1, []],
+  "workspace-picker": [13, []],
+  "sidebar": [11, []],
+  "rename-workspace": [13, ["shift"]],
+  "rename-tab": [17, ["shift"]],
+  "rename-pane": [35, ["shift"]],
+  "close-workspace": [2, ["shift"]],
+  "close-tab": [7, ["shift"]],
+  "close-pane": [7, []]
+};
+for (const [command, [keyCode, modifiers]] of Object.entries(defaultActionKeyCodes)) {
+  assert.deepEqual(resolveKeySequence(command, {}), [
+    { keyCode: 11, modifiers: ["control"] },
+    { keyCode, modifiers }
+  ]);
 }
-assert.equal(bindingOverride("workspace-picker", "[keys]\nprefix = \"ctrl+a\""), "prefix");
-assert.equal(bindingOverride("workspace-picker", "keys.workspace_picker = \"ctrl+alt+w\""), "workspace_picker");
-assert.equal(bindingOverride("workspace-picker", "[\"keys\"]\n\"workspace_picker\" = \"ctrl+alt+w\""), "workspace_picker");
-assert.equal(bindingOverride("workspace-picker", "\"keys\".\"workspace_picker\" = \"ctrl+alt+w\""), "workspace_picker");
-assert.equal(bindingOverride("workspace-picker", "keys = { workspace_picker = \"ctrl+alt+w\" }"), "keys");
-assert.equal(bindingOverride("workspace-picker", "[keys]\nnew_tab = \"ctrl+alt+c\""), null);
-assert.equal(bindingOverride("workspace-picker", "[keys]\n# workspace_picker = \"ctrl+alt+w\""), null);
-assert.equal(bindingOverride("workspace-next", "[keys]\nprefix = \"ctrl+a\""), null);
+assert.deepEqual(parseKeyChord("ctrl+alt+shift+left"), {
+  keyCode: 123,
+  modifiers: ["control", "option", "shift"],
+  printable: false
+});
+assert.deepEqual(parseKeyChord("meta+cmd+k"), {
+  keyCode: 40,
+  modifiers: ["option", "command"],
+  printable: true
+});
+assert.deepEqual(parseKeyChord("W"), { keyCode: 13, modifiers: ["shift"], printable: true });
+assert.deepEqual(parseKeyChord("ampersand"), { keyCode: 26, modifiers: ["shift"], printable: true });
+assert.deepEqual(parseKeyChord("double-quote"), { keyCode: 39, modifiers: ["shift"], printable: true });
+assert.deepEqual(parseKeyChord("f12"), { keyCode: 111, modifiers: [], printable: false });
+assert.equal(parseKeyChord("hyper+a"), null);
+assert.equal(parseKeyChord("f25"), null);
+assert.equal(parseKeyChord("ctrl+1..9"), null);
+assert.deepEqual(parseKeyBinding("prefix+shift+w", "f12"), [
+  { keyCode: 111, modifiers: [] },
+  { keyCode: 13, modifiers: ["shift"] }
+]);
+assert.deepEqual(parseKeyBinding("cmd+alt+left"), [
+  { keyCode: 123, modifiers: ["option", "command"] }
+]);
+assert.equal(parseKeyBinding("w"), null);
+assert.deepEqual(resolveKeySequence("workspace-picker", {
+  prefix: "f12",
+  workspace_picker: ["hyper+w", "prefix+w"]
+}), [
+  { keyCode: 111, modifiers: [] },
+  { keyCode: 13, modifiers: [] }
+]);
+assert.deepEqual(resolveKeySequence("workspace-picker", {
+  prefix: "hyper+a",
+  workspace_picker: ["w", "cmd+p"]
+}), [{ keyCode: 35, modifiers: ["command"] }]);
+assert.equal(resolveKeySequence("workspace-picker", { workspace_picker: "" }), null);
+assert.equal(resolveKeySequence("workspace-picker", { workspace_picker: ["w", 2] }), null);
+assert.equal(resolveKeySequence("workspace-next", {}), null);
+assert.deepEqual(parseKeyConfig(`
+[keys]
+prefix = "ctrl+a"
+workspace_picker = ["hyper+w", "prefix+w"]
+new_tab = "prefix+c"
+
+[ui]
+show_agent_labels_on_pane_borders = true
+`), {
+  prefix: "ctrl+a",
+  workspace_picker: ["hyper+w", "prefix+w"]
+});
+assert.deepEqual(parseKeyConfig("keys.workspace_picker = \"ctrl+alt+w\""), { workspace_picker: "ctrl+alt+w" });
+assert.deepEqual(parseKeyConfig("keys = { workspace_picker = \"ctrl+alt+w\" }"), { workspace_picker: "ctrl+alt+w" });
+assert.throws(() => parseKeyConfig("[keys\nworkspace_picker = \"prefix+w\""));
+assert.equal(appleScriptKeyLine({ keyCode: 13 }), "key code 13");
+assert.equal(
+  appleScriptKeyLine({ keyCode: 123, modifiers: ["control", "option", "shift"] }),
+  "key code 123 using {control down, option down, shift down}"
+);
+assert.throws(() => appleScriptKeyLine({ keyCode: 1, modifiers: ["hyper"] }), /Invalid key modifier/);
+
+const configDirectory = mkdtempSync(join(tmpdir(), "herdr-control-keybindings-"));
+const configFile = join(configDirectory, "config.toml");
+try {
+  writeFileSync(configFile, "[keys]\nprefix = \"ctrl+a\"\nworkspace_picker = \"prefix+w\"\n");
+  resetKeyConfigCache();
+  const firstConfig = readKeyConfig(configFile);
+  assert.equal(readKeyConfig(configFile), firstConfig);
+  assert.deepEqual(commandKeySequence("workspace-picker", configFile), [
+    { keyCode: 0, modifiers: ["control"] },
+    { keyCode: 13, modifiers: [] }
+  ]);
+  writeFileSync(configFile, "[keys]\nprefix = \"f12\"\nworkspace_picker = [\"w\", \"prefix+plus\"]\n");
+  const refreshedConfig = readKeyConfig(configFile);
+  assert.notEqual(refreshedConfig, firstConfig);
+  assert.deepEqual(commandKeySequence("workspace-picker", configFile), [
+    { keyCode: 111, modifiers: [] },
+    { keyCode: 24, modifiers: ["shift"] }
+  ]);
+  writeFileSync(configFile, "[keys\nworkspace_picker = \"prefix+w\"\n");
+  assert.throws(
+    () => commandKeySequence("workspace-picker", configFile),
+    error => error.code === "HERDR_CUSTOM_KEYBINDING"
+  );
+} finally {
+  resetKeyConfigCache();
+  rmSync(configDirectory, { recursive: true, force: true });
+}
+assert.deepEqual(commandKeySequence("workspace-picker", join(configDirectory, "missing.toml")), [
+  { keyCode: 11, modifiers: ["control"] },
+  { keyCode: 13, modifiers: [] }
+]);
 assert.deepEqual(errorFeedback({ code: "HERDR_CUSTOM_KEYBINDING" }), { title: "CUSTOM\nKEYS" });
 const paneState = {
   focused_pane_id: "p2",

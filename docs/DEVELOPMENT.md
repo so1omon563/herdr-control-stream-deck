@@ -3,9 +3,11 @@
 ## Repository layout
 
 - `plugin/com.so1omon563.herdr-control.sdPlugin/`: Stream Deck plugin source and assets.
+- `plugin/com.so1omon563.herdr-control.sdPlugin/keybindings.js`: isolated Herdr config parsing, binding resolution, and macOS key translation.
+- `plugin/com.so1omon563.herdr-control.sdPlugin/vendor/`: packaged runtime parser and third-party license.
 - `profile/`: unpacked 15-key profile source.
 - `profile-plus/`: unpacked Stream Deck+ profile source.
-- `validate.mjs`: dependency-free validation and regression checks.
+- `validate.mjs`: validation and regression checks.
 
 ## Validate
 
@@ -24,9 +26,29 @@ npm run validate:streamdeck
 
 The repository validation checks manifests, profile layouts, icons, agent
 folder pagination and status presentation, adaptive split-or-zoom behavior,
-dial feedback, command mappings, and the pane-routing regressions found during
-hardware testing. The Stream Deck validation runs the official CLI against the
-personal plugin UUID without updating its validation schemas during the run.
+custom binding parsing and translation, dial feedback, command mappings, and
+the pane-routing regressions found during hardware testing. The Stream Deck
+validation runs the official CLI against the personal plugin UUID without
+updating its validation schemas during the run.
+
+## Runtime dependency
+
+The plugin packages the CommonJS runtime and BSD 3-Clause license from the
+exact pinned `smol-toml` dependency. After changing that dependency, refresh
+the committed runtime files with:
+
+```sh
+npm run build:vendor
+```
+
+Do not hand-edit the vendored files. `npm test` compares them byte for byte
+with the installed dependency so dependency updates cannot silently leave the
+packaged parser stale.
+
+`keybindings.js` caches the parsed Herdr keys table using the config path and
+file metadata. A missing config uses documented defaults. Any unreadable,
+invalid, unbound, or unsupported configured value fails closed with `CUSTOM
+KEYS`; it never falls back blindly after an explicit unsupported assignment.
 
 ## Profiles
 

@@ -14,6 +14,8 @@ Herdr Control brings workspace, tab, pane, and agent navigation from [Herdr](htt
 - Browse and focus agents from a dedicated folder on both bundled profiles or
   from the Stream Deck+ dial.
 - Open Herdr-native Settings, Rename, and Close interactions.
+- Respect common custom Herdr prefixes and bindings for Spaces, Settings,
+  Sidebar, Rename, and Close.
 - Add configurable Herdr Command actions to custom Stream Deck profiles.
 
 Select the Pane dial or adaptive Pane key in Stream Deck to choose whether a
@@ -54,15 +56,43 @@ under `~/Library/Application Support/com.elgato.StreamDeck/Plugins/` in
 
 ## Known limitations
 
-- Spaces, Settings, Sidebar, Rename, and Close currently support only Herdr's default keybindings. Herdr Control blocks an affected action when it detects a relevant override instead of sending the wrong default sequence.
+- Custom Herdr bindings outside the documented subset below display `CUSTOM
+  KEYS` instead of sending a potentially incorrect key sequence.
 - The current build and installation process is for development only.
 - Other Stream Deck models have not been tested yet.
 
 ### Custom Herdr keybindings
 
-Herdr Control reads `HERDR_CONFIG_PATH` or `~/.config/herdr/config.toml` only to detect explicit overrides. It does not parse or execute configured bindings yet. If `keys.prefix` or the affected action field is assigned explicitly, the corresponding Stream Deck action displays `CUSTOM KEYS` and stops.
+Herdr Control parses `HERDR_CONFIG_PATH` or
+`~/.config/herdr/config.toml` with the bundled `smol-toml` parser. It reads
+`keys.prefix` and these nine action fields:
 
-The affected fields are `keys.workspace_picker`, `keys.settings`, `keys.toggle_sidebar`, `keys.rename_workspace`, `keys.rename_tab`, `keys.rename_pane`, `keys.close_workspace`, `keys.close_tab`, and `keys.close_pane`. An explicit `keys.prefix` assignment affects all nine. Even an explicit assignment containing the default value is treated as an override until automatic binding support is implemented.
+- `keys.workspace_picker`
+- `keys.settings`
+- `keys.toggle_sidebar`
+- `keys.rename_workspace`, `keys.rename_tab`, and `keys.rename_pane`
+- `keys.close_workspace`, `keys.close_tab`, and `keys.close_pane`
+
+Missing fields retain Herdr 0.8.2's documented defaults. An action binding may
+be a string or an array; arrays use the first value Herdr Control can simulate
+safely. Supported bindings include `prefix+key` sequences and direct modified
+chords. Modifier names are `ctrl` or `control`, `shift`, `alt` or `option`,
+`meta` as Herdr's Alt alias, and `cmd`, `command`, or `super`.
+
+The supported key set is ASCII letters and digits, F1 through F24, Enter,
+Return, Tab, Esc, Escape, Backspace, the arrow keys, Space, and Herdr's named
+punctuation: `minus`, `comma`, `period`, `slash`, `backslash`, `quote`,
+`double_quote`, `double-quote`, `semicolon`, `colon`, `percent`, `ampersand`,
+`backtick`, and `plus`. Equivalent single-character ASCII punctuation is also
+supported inside prefix sequences or modified chords.
+
+Unmodified direct printable bindings, `hyper`, indexed ranges such as `1..9`,
+non-ASCII keys, invalid TOML, unreadable files, and values with unsupported
+types fail closed with `CUSTOM KEYS`. Alt, Cmd/Super, and punctuation behavior
+can still depend on the terminal, tmux configuration, and keyboard layout;
+non-US layouts are not currently claimed. After editing Herdr's config, reload
+Herdr with `herdr server reload-config` or restart it. Herdr Control notices the
+file change automatically.
 
 Workspace and tab creation and cycling, pane navigation and layout controls, agent focus, Detach, and Back continue to use Herdr CLI or plugin-owned behavior. Native built-in action invocation is being discussed upstream in [herdr#1624](https://github.com/herdrdev/herdr/discussions/1624).
 
