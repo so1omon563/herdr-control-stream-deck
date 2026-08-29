@@ -5,12 +5,14 @@
   "license": "MIT",
   "description": "Herdr workspace, tab, pane, and agent controls for Elgato Stream Deck hardware.",
   "scripts": {
+    "build:marketplace": "node scripts/build-marketplace-concepts.mjs",
     "build:profiles": "zsh scripts/build-profiles.zsh",
     "build:release": "zsh scripts/build-release-assets.zsh",
     "build:vendor": "zsh scripts/build-vendor.zsh",
     "validate:streamdeck": "streamdeck validate plugin/com.so1omon563.herdr-control.sdPlugin --no-update-check",
     "pack:streamdeck": "streamdeck pack plugin/com.so1omon563.herdr-control.sdPlugin --output dist --force --no-update-check --no-file-list",
-    "test": "node validate.mjs"
+    "test": "node validate.mjs && node scripts/validate-marketplace-assets.mjs",
+    "validate:marketplace": "node scripts/validate-marketplace-assets.mjs"
   },
   "devDependencies": {
     "@elgato/cli": "1.9.0"

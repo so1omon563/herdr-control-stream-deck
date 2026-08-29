@@ -9,6 +9,9 @@
 - `profile-plus/`: unpacked Stream Deck+ profile source.
 - `scripts/check-release.mjs`: release version and packaged-manifest contract.
 - `scripts/check-next-version.mjs`: pre-tag marker and next-version contract.
+- `marketplace/`: deterministic Marketplace sources, exports, provenance, and capture guidance.
+- `scripts/build-marketplace-concepts.mjs`: Marketplace concept and final-media renderer.
+- `scripts/validate-marketplace-assets.mjs`: final Marketplace PNG inventory, dimension, and checksum validation.
 - `validate.mjs`: validation and regression checks.
 
 ## Validate
@@ -32,6 +35,21 @@ custom binding parsing and translation, dial feedback, command mappings, and
 the pane-routing regressions found during hardware testing. The Stream Deck
 validation runs the official CLI against the personal plugin UUID without
 updating its validation schemas during the run.
+
+## Marketplace media
+
+Regenerate and validate the deterministic app icon, thumbnail, and gallery
+images with:
+
+```sh
+npm run build:marketplace
+npm run validate:marketplace
+```
+
+The build requires `rsvg-convert` from librsvg. It writes final PNG files and
+their checksum manifest under `marketplace/exports/`. The build performs no
+network request, Marketplace submission, or publication. Provenance and the
+deferred demonstration-video plan are documented in `marketplace/`.
 
 ## Runtime dependency
 

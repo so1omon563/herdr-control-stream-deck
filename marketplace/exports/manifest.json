@@ -1,0 +1,45 @@
+{
+  "version": 1,
+  "assets": [
+    {
+      "file": "app-icon.png",
+      "purpose": "Marketplace app icon",
+      "source": "plugin/com.so1omon563.herdr-control.sdPlugin/images/plugin@2x.png",
+      "width": 288,
+      "height": 288,
+      "sha256": "a8ee595f32141ddd0556f5b3f5b01c51959029cb4f25c8ba131e19f67b355414"
+    },
+    {
+      "file": "thumbnail.png",
+      "purpose": "Marketplace thumbnail",
+      "source": "marketplace/concepts/01-control-surface.svg",
+      "width": 1920,
+      "height": 960,
+      "sha256": "e122f1a328347705b17edb6f7f6a30d7c8cd9128ee1b1480a517b3e710b00dab"
+    },
+    {
+      "file": "gallery-01-dial-focus.png",
+      "purpose": "Gallery image: Stream Deck + dial controls",
+      "source": "marketplace/concepts/02-dial-focus.svg",
+      "width": 1920,
+      "height": 960,
+      "sha256": "6f93cbc7480665cba32e4cb3b0e02c78463678bbd9f1356f4d996f39d59de1bf"
+    },
+    {
+      "file": "gallery-02-profile-parity.png",
+      "purpose": "Gallery image: supported profile comparison",
+      "source": "marketplace/concepts/03-profile-parity.svg",
+      "width": 1920,
+      "height": 960,
+      "sha256": "6beeb842a800064c25c6acae9657b2ec58c5dbb3f06d02b396dcff58c4c22dce"
+    },
+    {
+      "file": "gallery-03-agent-focus.png",
+      "purpose": "Gallery image: agent navigation",
+      "source": "marketplace/concepts/04-agent-focus.svg",
+      "width": 1920,
+      "height": 960,
+      "sha256": "5cf11cde597c5dec9dd35372f0b4c323d50bee2482de22c1f5deda2e46e351c5"
+    }
+  ]
+}

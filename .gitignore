@@ -2,3 +2,4 @@
 node_modules/
 dist/
 *.streamDeckPlugin
+marketplace/concepts/
