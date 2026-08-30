@@ -8,7 +8,8 @@ import {
   assertNextVersion,
   bumpFromMessage,
   expectedReleaseVersion,
-  highestStableVersion
+  highestStableVersion,
+  resolveReleaseRequest
 } from "./scripts/check-next-version.mjs";
 
 const require = createRequire(import.meta.url);
@@ -117,7 +118,9 @@ const releaseWorkflow = readFileSync(join(root, ".github/workflows/release.yml")
 for (const requiredText of [
   "workflow_dispatch:",
   "uses: so1omon563/custom-semver-bumper@v1",
-  "default_bump: none",
+  "RELEASE_PR_TITLE: ${{ github.event.pull_request.title }}",
+  "default_bump: ${{ steps.request.outputs.bump_type }}",
+  "release_requested: ${{ steps.request.outputs.release_requested }}",
   "node scripts/check-next-version.mjs",
   "node scripts/check-release.mjs \"$NEW_TAG\"",
   "needs.bump-version.outputs.release_requested == 'true'",
@@ -131,6 +134,7 @@ for (const requiredText of [
 assert.doesNotMatch(releaseWorkflow, /move_(major|minor)_tag:\s*['"]?true/);
 assert.doesNotMatch(releaseWorkflow, /move-(major|minor)-tag:\s*['"]?true/);
 assert.doesNotMatch(releaseWorkflow, /branch_name:/);
+assert.doesNotMatch(releaseWorkflow, /steps\.bump\.outputs\.should_release/);
 assert.ok(
   releaseWorkflow.indexOf("node scripts/check-next-version.mjs") <
     releaseWorkflow.indexOf("uses: so1omon563/custom-semver-bumper@v1"),
@@ -148,6 +152,22 @@ assert.equal(bumpFromMessage("Docs\n\nPrepare #minor"), "minor");
 assert.equal(bumpFromMessage("Docs #patchwork"), null);
 assert.equal(bumpFromMessage("Release #patch #skip"), null);
 assert.equal(bumpFromMessage("Skip this\n\n#patch #skip"), null);
+assert.deepEqual(resolveReleaseRequest("Release v0.1.1 #patch #release"), {
+  bumpType: "patch",
+  releaseRequested: true
+});
+assert.deepEqual(resolveReleaseRequest("Docs #patch"), {
+  bumpType: "patch",
+  releaseRequested: false
+});
+assert.deepEqual(resolveReleaseRequest("Docs only"), {
+  bumpType: "none",
+  releaseRequested: false
+});
+assert.deepEqual(resolveReleaseRequest("Docs #patchwork #release"), {
+  bumpType: "none",
+  releaseRequested: false
+});
 assert.deepEqual(highestStableVersion(["v0.1.9", "v0.2.0", "v0.3.0-beta.1"]), [0, 2, 0]);
 assert.equal(expectedReleaseVersion(["v0.1.0"], "Release #patch"), "0.1.1");
 assert.throws(

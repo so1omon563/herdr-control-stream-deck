@@ -1,11 +1,12 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptPath = fileURLToPath(import.meta.url);
 const root = resolve(dirname(scriptPath), "..");
 const bumpMarkers = ["major", "minor", "patch"];
+const releaseMarkers = ["#release", "#publish", "#ship"];
 const skipMarkers = ["#skip-version", "#no-bump", "#skip"];
 
 function hasMarker(text, marker) {
@@ -40,6 +41,14 @@ export function bumpFromMessage(message) {
   if (titleBump) return titleBump;
   if (skipMarkers.some(marker => hasMarker(body, marker))) return null;
   return firstBumpMarker(message);
+}
+
+export function resolveReleaseRequest(message) {
+  const bumpType = bumpFromMessage(message) ?? "none";
+  return {
+    bumpType,
+    releaseRequested: bumpType !== "none" && releaseMarkers.some(marker => hasMarker(message, marker))
+  };
 }
 
 function parseStableTag(tag) {
@@ -81,7 +90,7 @@ export function assertNextVersion(version, tags, message) {
 
 if (resolve(process.argv[1] ?? "") === scriptPath) {
   const packageManifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  const message = execFileSync("git", ["log", "-1", "--pretty=%B"], {
+  const message = process.env.RELEASE_PR_TITLE ?? execFileSync("git", ["log", "-1", "--pretty=%B"], {
     cwd: root,
     encoding: "utf8"
   });
@@ -90,6 +99,13 @@ if (resolve(process.argv[1] ?? "") === scriptPath) {
     encoding: "utf8"
   }).trim().split("\n").filter(Boolean);
   const expected = assertNextVersion(packageManifest.version, tags, message);
+  const request = resolveReleaseRequest(message);
+  if (process.env.GITHUB_OUTPUT) {
+    appendFileSync(
+      process.env.GITHUB_OUTPUT,
+      `bump_type=${request.bumpType}\nrelease_requested=${request.releaseRequested}\n`
+    );
+  }
   console.log(expected
     ? `Pre-tag version contract passed for v${expected}`
     : "No version marker found; custom-semver-bumper will skip tagging");

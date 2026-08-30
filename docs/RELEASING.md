@@ -37,9 +37,11 @@ and verifies the checksum.
 
 ## Normal release path
 
-Normal pull requests do not create tags or releases. The bumper uses
-`default_bump: none`, and release creation is also gated on its
-`should_release` output.
+Normal pull requests do not create tags or releases. The workflow resolves the
+version and release markers from the merged pull request title, passes `none`
+to the bumper when no version marker is present, and gates release creation on
+the resolved `#release` request. The pull request title is authoritative even
+when GitHub chooses a squash commit subject from the branch commit instead.
 
 The current highest release tag is `v0.1.0`. Package version `0.1.1` and
 manifest version `0.1.1.0` therefore require `#patch #release`: `#patch`
@@ -51,9 +53,10 @@ verified on 2026-08-29: `custom-semver-bumper@v1` resolved to `v1.0.12`, and
 `release-creator@v2` resolved to `v2.0.2`.
 
 Before the tag-writing action runs, the workflow applies the bumper's hashtag
-marker precedence to the merged commit message, calculates the next version
-from the highest existing stable tag, and requires the staged package metadata
-to match. A mismatched release PR fails before it can create an immutable tag.
+marker precedence to the pull request title, calculates the next version from
+the highest existing stable tag, and requires the staged package metadata to
+match. It passes that validated bump type to the maintained bumper. A
+mismatched release PR fails before it can create an immutable tag.
 
 For a release:
 
@@ -61,7 +64,8 @@ For a release:
    the intended version.
 2. Run the full local validation and release-asset build for the matching tag.
 3. Use exactly one version marker in the release PR title: `#patch`, `#minor`,
-   or `#major`. Add `#release` to request GitHub Release creation.
+   or `#major`. Add `#release` to request GitHub Release creation. Do not rely
+   on the branch commit subject or squash commit message to carry the markers.
 4. Confirm explicit authorization immediately before merging the PR. The
    release-triggering merge is a distinct public release action.
 5. After merge, `custom-semver-bumper@v1` creates the immutable version tag.
