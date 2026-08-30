@@ -6,7 +6,7 @@
         "Keypad"
       ],
       "DisableAutomaticStates": true,
-      "Icon": "images/idle",
+      "Icon": "images/action-open",
       "Name": "Herdr Control",
       "PropertyInspectorPath": "property-inspector.html",
       "States": [
@@ -25,7 +25,7 @@
       "Controllers": [
         "Keypad"
       ],
-      "Icon": "images/command",
+      "Icon": "images/action-command",
       "Name": "Herdr Command",
       "PropertyInspectorPath": "property-inspector.html",
       "States": [
@@ -93,9 +93,9 @@
   ],
   "Author": "so1omon563",
   "Category": "Herdr Control",
-  "CategoryIcon": "images/idle",
+  "CategoryIcon": "images/category",
   "CodePath": "plugin",
-  "Description": "Open or return to Herdr in Ghostty, kitty, iTerm2, or Terminal.app and automatically show the bundled Stream Deck or Stream Deck+ controls while it is focused.",
+  "Description": "Open or return to Herdr in Ghostty, kitty, iTerm2, or Terminal.app and automatically show the bundled Stream Deck or Stream Deck + controls while it is focused.",
   "Icon": "images/plugin",
   "Name": "Herdr Control",
   "OS": [

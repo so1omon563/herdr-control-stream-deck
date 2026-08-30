@@ -1,0 +1,89 @@
+{
+  "version": 1,
+  "product": {
+    "name": "Herdr Control",
+    "productType": "Stream Deck plugin",
+    "category": "Development",
+    "language": "English",
+    "price": "Free",
+    "description": "Herdr Control brings fast Herdr workspace, tab, pane, and agent navigation to Elgato Stream Deck on macOS. Use physical keys or Stream Deck + dials to move through an active terminal session, create workspaces and tabs, split, resize, or zoom panes, focus live agents, and open common Herdr controls without leaving your current workflow.\n\nHighlights:\n- Ready-made profiles for the 15-key Stream Deck and Stream Deck +\n- Configurable commands for custom profiles\n- Ghostty, kitty, iTerm2, and Terminal.app support\n- Common custom Herdr keybindings supported\n\nRequires macOS 13 or later on Apple silicon, Stream Deck 6.6 or later, Herdr 0.8.2, Node.js, a supported terminal, and a 15-key Stream Deck or Stream Deck +. Some controls require Accessibility and Automation permissions. Herdr Control is an independent integration and is not affiliated with Herdr or Elgato."
+  },
+  "compatibility": {
+    "operatingSystems": [
+      "macOS"
+    ],
+    "devices": [
+      "Stream Deck (15-key)",
+      "Stream Deck +"
+    ],
+    "minimumMacOS": "13",
+    "minimumStreamDeck": "6.6",
+    "architecture": "Apple silicon",
+    "dialSupport": true,
+    "bundledProfiles": true,
+    "dependencies": [
+      "Herdr 0.8.2",
+      "Node.js",
+      "Ghostty, kitty, iTerm2, or Terminal.app"
+    ]
+  },
+  "additionalLinks": [
+    {
+      "label": "Support",
+      "url": "https://github.com/so1omon563/herdr-control-stream-deck/issues"
+    },
+    {
+      "label": "Setup Guide",
+      "url": "https://github.com/so1omon563/herdr-control-stream-deck#install-from-github"
+    },
+    {
+      "label": "Source Code",
+      "url": "https://github.com/so1omon563/herdr-control-stream-deck"
+    },
+    {
+      "label": "Herdr",
+      "url": "https://herdr.dev/"
+    }
+  ],
+  "release": {
+    "sourceVersion": "0.1.0",
+    "sourceManifestVersion": "0.1.0.0",
+    "notes": "Initial Marketplace release. Includes bundled profiles for the 15-key Stream Deck and Stream Deck +, workspace, tab, pane, and agent navigation, adaptive split-or-zoom behavior, resize controls, common custom keybinding support, and configurable Herdr Command actions.",
+    "submissionArtifact": {
+      "status": "pending-next-github-release",
+      "filePattern": "Herdr-Control-vX.Y.Z.streamDeckPlugin",
+      "reason": "SO1-299 changes packaged Marketplace metadata, action-list artwork, and Property Inspector help. Publish and verify a new version through the standard GitHub release workflow before Marketplace upload."
+    },
+    "lastVerifiedGithubArtifact": {
+      "file": "Herdr-Control-v0.1.0.streamDeckPlugin",
+      "url": "https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.0/Herdr-Control-v0.1.0.streamDeckPlugin",
+      "sha256": "c0e9f973a576be46dc1b3c396c0e8503be3b05954747998d11314599d3d09ae2",
+      "checksumUrl": "https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.0/Herdr-Control-v0.1.0.streamDeckPlugin.sha256"
+    }
+  },
+  "media": {
+    "appIcon": "marketplace/exports/app-icon.png",
+    "thumbnail": "marketplace/exports/thumbnail.png",
+    "gallery": [
+      "marketplace/exports/gallery-01-dial-focus.png",
+      "marketplace/exports/gallery-02-profile-parity.png",
+      "marketplace/exports/gallery-03-agent-focus.png"
+    ],
+    "demonstrationVideo": {
+      "required": true,
+      "status": "pending-separate-ticket"
+    }
+  },
+  "maker": {
+    "organization": "so1omon563",
+    "profile": "complete",
+    "profilePicture": "pending-user-action"
+  },
+  "decisions": {
+    "drmCompatible": false,
+    "drmRationale": "The current plugin uses SDK 2, supports Stream Deck 6.6, and does not use @elgato/streamdeck v2 or later. DRM requires a separately tested SDK 3 migration and a Stream Deck 6.9 or later minimum.",
+    "privacyPolicyRequired": false,
+    "privacyRationale": "The plugin runs locally and does not collect or transmit personal, identifiable, or analytics data. It reads local Herdr state and configuration and communicates only with local applications and the local Stream Deck WebSocket.",
+    "automaticallyPublishAfterApproval": false
+  }
+}
