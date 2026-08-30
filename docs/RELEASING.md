@@ -56,7 +56,10 @@ Before the tag-writing action runs, the workflow applies the bumper's hashtag
 marker precedence to the pull request title, calculates the next version from
 the highest existing stable tag, and requires the staged package metadata to
 match. It passes that validated bump type to the maintained bumper. A
-mismatched release PR fails before it can create an immutable tag.
+mismatched release PR fails before it can create an immutable tag. Because the
+bumper still inspects the checked-out commit before using its fallback, the
+same preflight rejects an effective skip marker or a conflicting version marker
+in the squash commit.
 
 For a release:
 

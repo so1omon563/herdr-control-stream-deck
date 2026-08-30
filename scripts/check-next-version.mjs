@@ -43,6 +43,26 @@ export function bumpFromMessage(message) {
   return firstBumpMarker(message);
 }
 
+function skippedByMessage(message) {
+  const [title = "", ...bodyLines] = message.split(/\r?\n/);
+  if (skipMarkers.some(marker => hasMarker(title, marker))) return true;
+  if (firstBumpMarker(title)) return false;
+  return skipMarkers.some(marker => hasMarker(bodyLines.join("\n"), marker));
+}
+
+export function assertCommitMarkersCompatible(requestMessage, commitMessage) {
+  const requestedBump = bumpFromMessage(requestMessage);
+  const commitBump = bumpFromMessage(commitMessage);
+  if (requestedBump && skippedByMessage(commitMessage)) {
+    throw new Error("merge commit skip marker conflicts with the pull request title");
+  }
+  if (commitBump && commitBump !== requestedBump) {
+    throw new Error(
+      `merge commit #${commitBump} marker conflicts with pull request title bump ${requestedBump ?? "none"}`
+    );
+  }
+}
+
 export function resolveReleaseRequest(message) {
   const bumpType = bumpFromMessage(message) ?? "none";
   return {
@@ -90,10 +110,14 @@ export function assertNextVersion(version, tags, message) {
 
 if (resolve(process.argv[1] ?? "") === scriptPath) {
   const packageManifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  const message = process.env.RELEASE_PR_TITLE ?? execFileSync("git", ["log", "-1", "--pretty=%B"], {
+  const commitMessage = execFileSync("git", ["log", "-1", "--pretty=%B"], {
     cwd: root,
     encoding: "utf8"
   });
+  const message = process.env.RELEASE_PR_TITLE ?? commitMessage;
+  if (process.env.RELEASE_PR_TITLE) {
+    assertCommitMarkersCompatible(message, commitMessage);
+  }
   const tags = execFileSync("git", ["tag", "--list", "v*.*.*"], {
     cwd: root,
     encoding: "utf8"

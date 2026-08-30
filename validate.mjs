@@ -5,6 +5,7 @@ import { createRequire } from "node:module";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import {
+  assertCommitMarkersCompatible,
   assertNextVersion,
   bumpFromMessage,
   expectedReleaseVersion,
@@ -168,6 +169,26 @@ assert.deepEqual(resolveReleaseRequest("Docs #patchwork #release"), {
   bumpType: "none",
   releaseRequested: false
 });
+assert.doesNotThrow(() => assertCommitMarkersCompatible(
+  "Release #patch #release",
+  "fix: release workflow"
+));
+assert.doesNotThrow(() => assertCommitMarkersCompatible(
+  "Release #patch #release",
+  "Release #patch\n\nExample: #skip"
+));
+assert.throws(
+  () => assertCommitMarkersCompatible("Release #patch #release", "Release #minor"),
+  /#minor marker conflicts/
+);
+assert.throws(
+  () => assertCommitMarkersCompatible("Release #patch #release", "Skip release #skip"),
+  /skip marker conflicts/
+);
+assert.throws(
+  () => assertCommitMarkersCompatible("Docs only", "Accidental release #patch"),
+  /#patch marker conflicts/
+);
 assert.deepEqual(highestStableVersion(["v0.1.9", "v0.2.0", "v0.3.0-beta.1"]), [0, 2, 0]);
 assert.equal(expectedReleaseVersion(["v0.1.0"], "Release #patch"), "0.1.1");
 assert.throws(
