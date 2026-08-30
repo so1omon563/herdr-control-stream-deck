@@ -1,7 +1,7 @@
 #!/usr/bin/env node
 
 import { createHash } from "node:crypto";
-import { readFile } from "node:fs/promises";
+import { readFile, readdir } from "node:fs/promises";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 
@@ -16,6 +16,20 @@ const expected = new Map([
   ["gallery-02-profile-parity.png", [1920, 960]],
   ["gallery-03-agent-focus.png", [1920, 960]],
 ]);
+const expectedExportFiles = new Set(["manifest.json", ...expected.keys()]);
+const exportEntries = await readdir(exportDir, { withFileTypes: true });
+const actualExportFiles = new Set(exportEntries.filter((entry) => entry.isFile()).map((entry) => entry.name));
+const unexpectedExports = exportEntries
+  .filter((entry) => !entry.isFile() || !expectedExportFiles.has(entry.name))
+  .map((entry) => entry.name);
+const missingExports = [...expectedExportFiles].filter((file) => !actualExportFiles.has(file));
+
+if (unexpectedExports.length !== 0) {
+  throw new Error(`Unexpected Marketplace export files: ${unexpectedExports.join(", ")}`);
+}
+if (missingExports.length !== 0) {
+  throw new Error(`Missing Marketplace export files: ${missingExports.join(", ")}`);
+}
 
 if (manifest.version !== 1) {
   throw new Error(`Unsupported Marketplace manifest version: ${manifest.version}`);

@@ -46,10 +46,11 @@ npm run build:marketplace
 npm run validate:marketplace
 ```
 
-The build requires `rsvg-convert` from librsvg. It writes final PNG files and
-their checksum manifest under `marketplace/exports/`. The build performs no
-network request, Marketplace submission, or publication. Provenance and the
-deferred demonstration-video plan are documented in `marketplace/`.
+The build uses the exact-pinned Node.js renderer and Inter font sources from
+the development dependencies. It writes final PNG files and their checksum
+manifest under `marketplace/exports/`. The build performs no network request,
+Marketplace submission, or publication. Provenance and the deferred
+demonstration-video plan are documented in `marketplace/`.
 
 ## Runtime dependency
 

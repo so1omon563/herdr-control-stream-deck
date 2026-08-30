@@ -28,6 +28,7 @@ committed deliverables live under `exports/`.
 
 ## Build
 
-Run `npm run build:marketplace`. Rendering requires `rsvg-convert` from
-librsvg. The build refreshes the ignored local concepts and the committed final
-exports, including their deterministic asset manifest.
+Run `npm run build:marketplace`. Rendering uses the exact-pinned Node.js
+renderer and Inter font sources from the development dependencies. The build
+refreshes the ignored local concepts and the committed final exports,
+including their deterministic asset manifest.
