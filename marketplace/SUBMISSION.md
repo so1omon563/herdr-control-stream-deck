@@ -34,7 +34,7 @@ core controls, and states the installation requirements.
 
 | Submission field | Repository or release source |
 | --- | --- |
-| Product file | Pending the next versioned GitHub release after SO1-299 |
+| Product file | Pending the staged `v0.1.1` GitHub release in SO1-300 |
 | Product checksum | Pending the same release and fresh-download verification |
 | App icon | `marketplace/exports/app-icon.png` |
 | Thumbnail | `marketplace/exports/thumbnail.png` |
@@ -48,9 +48,10 @@ support reordering gallery items without removing and re-adding them.
 
 The published `v0.1.0` installer remains the last verified baseline, and its
 URL and checksum are recorded in `listing.json`. Do not upload it to
-Marketplace. SO1-299 changes packaged catalog icons, metadata, and Property
-Inspector help, so the submission candidate must be a new version published
-and verified through the standard GitHub release workflow.
+Marketplace. SO1-300 stages `v0.1.1` with the catalog icons, metadata, and
+Property Inspector help merged through SO1-299. That version must be published
+and verified through the standard GitHub release workflow before it becomes
+the submission candidate.
 
 ## Product decisions
 
@@ -108,9 +109,9 @@ explicit authorization after review approval.
 - [ ] Add the remaining Maker profile picture in Maker Console.
 - [ ] Create and complete the separately tracked functional demonstration
   video using [`CAPTURE.md`](CAPTURE.md).
-- [ ] After SO1-299 merges, publish and verify a new GitHub release through the
-  maintained composite-action workflow. That release needs its own explicit
-  authorization.
+- [ ] Publish and verify staged release `v0.1.1` through SO1-300 and the
+  maintained composite-action workflow. That release needs its own immediate
+  explicit authorization.
 - [ ] Reconfirm that `Herdr Control` remains available when creating the
   product draft. Maker Console is authoritative for product-name availability.
 - [ ] Download the new release's exact versioned installer and verify its
