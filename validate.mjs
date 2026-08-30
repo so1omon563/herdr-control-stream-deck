@@ -91,6 +91,9 @@ assert.equal(pluginManifest.UUID, "com.so1omon563.herdr-control");
 assert.equal(pluginManifest.Author, "so1omon563");
 const toggleAction = pluginManifest.Actions.find(item => item.UUID === "com.so1omon563.herdr-control.toggle");
 const commandAction = pluginManifest.Actions.find(item => item.UUID === "com.so1omon563.herdr-control.command");
+assert.equal(pluginManifest.CategoryIcon, "images/category");
+assert.equal(toggleAction.Icon, "images/action-open");
+assert.equal(commandAction.Icon, "images/action-command");
 assert.equal(toggleAction.PropertyInspectorPath, "property-inspector.html");
 assert.notEqual(toggleAction.VisibleInActionsList, false);
 assert.equal(commandAction.PropertyInspectorPath, "property-inspector.html");
@@ -99,6 +102,16 @@ for (const uuid of ["com.so1omon563.herdr-control.back", "com.so1omon563.herdr-c
   assert.equal(pluginManifest.Actions.find(item => item.UUID === uuid).VisibleInActionsList, false);
 }
 assert.deepEqual(pluginManifest.Profiles.map(item => item.DeviceType), [0, 7]);
+for (const icon of ["category.svg", "action-open.svg", "action-command.svg"]) {
+  const svg = readFileSync(join(plugin, "images", icon), "utf8");
+  const size = icon === "category.svg" ? 28 : 20;
+  assert.match(svg, new RegExp(`width="${size}" height="${size}" viewBox="0 0 ${size} ${size}"`));
+  assert.match(svg, /stroke="#FFFFFF"/);
+  assert.doesNotMatch(svg, /<rect\b/);
+  assert.deepEqual([...svg.matchAll(/#[0-9A-Fa-f]{6}/g)].map(match => match[0]),
+    [...svg.matchAll(/#[0-9A-Fa-f]{6}/g)].map(() => "#FFFFFF"),
+    `${icon} must remain monochrome white on a transparent background`);
+}
 
 const releaseWorkflow = readFileSync(join(root, ".github/workflows/release.yml"), "utf8");
 for (const requiredText of [
@@ -340,6 +353,9 @@ assert.deepEqual([...commandSelect.matchAll(/<option value="([^"]+)">/g)].map(ma
 ]);
 assert.match(inspector, /event:\s*"setSettings"/);
 assert.match(inspector, /action,\s*context,\s*payload: settings/);
+assert.match(inspector, /Setup and support/);
+assert.match(inspector, /event:\s*"openUrl"/);
+assert.match(inspector, /https:\/\/github\.com\/so1omon563\/herdr-control-stream-deck#first-use/);
 assert.match(inspector, /Side by side \(Split Right\)/);
 assert.match(inspector, /Stacked \(Split Down\)/);
 assert.match(inspector, /action === ENCODER_UUID/);

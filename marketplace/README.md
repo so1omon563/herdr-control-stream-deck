@@ -4,6 +4,10 @@ This directory contains the deterministic Marketplace media workspace for
 Herdr Control. Building these files does not upload or submit anything to the
 Elgato Marketplace.
 
+Exact Maker Console field values and product decisions live in
+[`listing.json`](listing.json). [`SUBMISSION.md`](SUBMISSION.md) maps those
+values to the current submission flow and tracks the remaining preflight work.
+
 ## Final assets
 
 | File | Purpose | Size |
@@ -31,9 +35,10 @@ npm run validate:marketplace
 
 The build regenerates the concept SVG and PNG files, final exports, and the
 SHA-256 export manifest. Validation checks the PNG signatures, exact required
-dimensions, complete asset inventory, manifest dimensions, checksums, and the
-absence of renderer-dependent SVG text. CI rebuilds the full media set and
-requires the committed files to remain byte-for-byte unchanged.
+dimensions, complete asset inventory, manifest dimensions, checksums, listing
+length and identity, submission field mappings, and the absence of
+renderer-dependent SVG text. CI rebuilds the full media set and requires the
+committed files to remain byte-for-byte unchanged.
 
 See [PROVENANCE.md](PROVENANCE.md) for source and ownership details and
 [CAPTURE.md](CAPTURE.md) for the later demonstration-video plan.

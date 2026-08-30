@@ -11,6 +11,8 @@
     label { display: block; margin-bottom: 6px; font-weight: 600; }
     select { box-sizing: border-box; width: 100%; padding: 6px; color: #fff; background: #3d3d3d; border: 1px solid #666; border-radius: 4px; }
     p { margin: 10px 0 0; color: #aaa; line-height: 1.35; }
+    button { padding: 0; color: #9ddcff; background: none; border: 0; font: inherit; text-decoration: underline; cursor: pointer; }
+    .help { margin-top: 16px; }
     section[hidden] { display: none; }
   </style>
 </head>
@@ -78,6 +80,7 @@
     </select>
     <p>With multiple panes, pressing the control toggles zoom instead.</p>
   </section>
+  <p class="help"><button id="help" type="button">Setup and support</button></p>
   <script>
     const COMMAND_UUID = "com.so1omon563.herdr-control.command";
     const ENCODER_UUID = "com.so1omon563.herdr-control.encoder";
@@ -91,6 +94,7 @@
     const terminalSettings = document.getElementById("terminal-settings");
     const commandSettings = document.getElementById("command-settings");
     const paneSettings = document.getElementById("pane-settings");
+    const help = document.getElementById("help");
 
     const setActionSettings = patch => {
       settings = { ...settings, ...patch };
@@ -133,6 +137,13 @@
 
     splitDirection.addEventListener("change", () => {
       setActionSettings({ splitDirection: splitDirection.value });
+    });
+
+    help.addEventListener("click", () => {
+      socket?.send(JSON.stringify({
+        event: "openUrl",
+        payload: { url: "https://github.com/so1omon563/herdr-control-stream-deck#first-use" }
+      }));
     });
 
     window.connectElgatoStreamDeckSocket = (port, uuid, registerEvent, _info, actionInfoJson) => {
