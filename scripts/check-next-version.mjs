@@ -1,11 +1,12 @@
 import { execFileSync } from "node:child_process";
-import { readFileSync } from "node:fs";
+import { appendFileSync, readFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 
 const scriptPath = fileURLToPath(import.meta.url);
 const root = resolve(dirname(scriptPath), "..");
 const bumpMarkers = ["major", "minor", "patch"];
+const releaseMarkers = ["#release", "#publish", "#ship"];
 const skipMarkers = ["#skip-version", "#no-bump", "#skip"];
 
 function hasMarker(text, marker) {
@@ -40,6 +41,34 @@ export function bumpFromMessage(message) {
   if (titleBump) return titleBump;
   if (skipMarkers.some(marker => hasMarker(body, marker))) return null;
   return firstBumpMarker(message);
+}
+
+function skippedByMessage(message) {
+  const [title = "", ...bodyLines] = message.split(/\r?\n/);
+  if (skipMarkers.some(marker => hasMarker(title, marker))) return true;
+  if (firstBumpMarker(title)) return false;
+  return skipMarkers.some(marker => hasMarker(bodyLines.join("\n"), marker));
+}
+
+export function assertCommitMarkersCompatible(requestMessage, commitMessage) {
+  const requestedBump = bumpFromMessage(requestMessage);
+  const commitBump = bumpFromMessage(commitMessage);
+  if (requestedBump && skippedByMessage(commitMessage)) {
+    throw new Error("merge commit skip marker conflicts with the pull request title");
+  }
+  if (commitBump && commitBump !== requestedBump) {
+    throw new Error(
+      `merge commit #${commitBump} marker conflicts with pull request title bump ${requestedBump ?? "none"}`
+    );
+  }
+}
+
+export function resolveReleaseRequest(message) {
+  const bumpType = bumpFromMessage(message) ?? "none";
+  return {
+    bumpType,
+    releaseRequested: bumpType !== "none" && releaseMarkers.some(marker => hasMarker(message, marker))
+  };
 }
 
 function parseStableTag(tag) {
@@ -81,15 +110,26 @@ export function assertNextVersion(version, tags, message) {
 
 if (resolve(process.argv[1] ?? "") === scriptPath) {
   const packageManifest = JSON.parse(readFileSync(join(root, "package.json"), "utf8"));
-  const message = execFileSync("git", ["log", "-1", "--pretty=%B"], {
+  const commitMessage = execFileSync("git", ["log", "-1", "--pretty=%B"], {
     cwd: root,
     encoding: "utf8"
   });
+  const message = process.env.RELEASE_PR_TITLE ?? commitMessage;
+  if (process.env.RELEASE_PR_TITLE) {
+    assertCommitMarkersCompatible(message, commitMessage);
+  }
   const tags = execFileSync("git", ["tag", "--list", "v*.*.*"], {
     cwd: root,
     encoding: "utf8"
   }).trim().split("\n").filter(Boolean);
   const expected = assertNextVersion(packageManifest.version, tags, message);
+  const request = resolveReleaseRequest(message);
+  if (process.env.GITHUB_OUTPUT) {
+    appendFileSync(
+      process.env.GITHUB_OUTPUT,
+      `bump_type=${request.bumpType}\nrelease_requested=${request.releaseRequested}\n`
+    );
+  }
   console.log(expected
     ? `Pre-tag version contract passed for v${expected}`
     : "No version marker found; custom-semver-bumper will skip tagging");
