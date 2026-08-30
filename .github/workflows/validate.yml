@@ -16,5 +16,7 @@ jobs:
         with:
           node-version: 24
       - run: npm ci
+      - run: npm run build:marketplace
+      - run: git diff --exit-code -- marketplace/exports
       - run: npm test
       - run: npm run validate:streamdeck
