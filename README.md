@@ -9,7 +9,7 @@ Herdr Control brings workspace, tab, pane, and agent navigation from
 > is limited to the exact software and hardware evidence in the
 > [support matrix](docs/SUPPORT.md).
 
-[Download Herdr Control v0.1.0](https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.0/Herdr-Control-v0.1.0.streamDeckPlugin)
+[Download Herdr Control v0.1.1](https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.1/Herdr-Control-v0.1.1.streamDeckPlugin)
 or [view all releases](https://github.com/so1omon563/herdr-control-stream-deck/releases).
 
 ## What it does
@@ -43,18 +43,18 @@ versions are not currently claimed.
 No Git clone, npm command, or development tooling is required.
 
 1. Download the current
-   [Herdr Control installer](https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.0/Herdr-Control-v0.1.0.streamDeckPlugin)
+   [Herdr Control installer](https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.1/Herdr-Control-v0.1.1.streamDeckPlugin)
    and its
-   [SHA-256 checksum](https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.0/Herdr-Control-v0.1.0.streamDeckPlugin.sha256).
+   [SHA-256 checksum](https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.1/Herdr-Control-v0.1.1.streamDeckPlugin.sha256).
 2. Optionally verify the download in Terminal:
 
    ```sh
    cd ~/Downloads
-   shasum -a 256 -c Herdr-Control-v0.1.0.streamDeckPlugin.sha256
+   shasum -a 256 -c Herdr-Control-v0.1.1.streamDeckPlugin.sha256
    ```
 
-   A valid download reports `Herdr-Control-v0.1.0.streamDeckPlugin: OK`.
-3. Double-click `Herdr-Control-v0.1.0.streamDeckPlugin` and approve the plugin
+   A valid download reports `Herdr-Control-v0.1.1.streamDeckPlugin: OK`.
+3. Double-click `Herdr-Control-v0.1.1.streamDeckPlugin` and approve the plugin
    installation in Stream Deck.
 4. When Stream Deck asks to install the bundled profiles, choose **Install
    Profile(s)**. `HERDR` targets the 15-key Stream Deck and `HERDR Plus`

@@ -41,12 +41,14 @@ Normal pull requests do not create tags or releases. The bumper uses
 `default_bump: none`, and release creation is also gated on its
 `should_release` output.
 
-The initial scaffold already stages package version `0.1.0` and manifest
-version `0.1.0.0`. With no existing version tags, the first release pull
-request must use `#minor #release`: `#minor` produces `v0.1.0`, while
-`#release` requests the GitHub prerelease. Do not restage the same version or
-substitute `#patch`, which would target `v0.0.1` and fail the pre-tag metadata
-check.
+The current highest release tag is `v0.1.0`. Package version `0.1.1` and
+manifest version `0.1.1.0` therefore require `#patch #release`: `#patch`
+produces `v0.1.1`, while `#release` requests the GitHub prerelease. Do not use
+`#minor`, which would target `v0.2.0` and fail the pre-tag metadata check.
+
+Immediately before preparing `v0.1.1`, the maintained action majors were
+verified on 2026-08-29: `custom-semver-bumper@v1` resolved to `v1.0.12`, and
+`release-creator@v2` resolved to `v2.0.2`.
 
 Before the tag-writing action runs, the workflow applies the bumper's hashtag
 marker precedence to the merged commit message, calculates the next version

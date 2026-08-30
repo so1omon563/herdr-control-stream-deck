@@ -46,13 +46,13 @@
     }
   ],
   "release": {
-    "sourceVersion": "0.1.0",
-    "sourceManifestVersion": "0.1.0.0",
+    "sourceVersion": "0.1.1",
+    "sourceManifestVersion": "0.1.1.0",
     "notes": "Initial Marketplace release. Includes bundled profiles for the 15-key Stream Deck and Stream Deck +, workspace, tab, pane, and agent navigation, adaptive split-or-zoom behavior, resize controls, common custom keybinding support, and configurable Herdr Command actions.",
     "submissionArtifact": {
       "status": "pending-next-github-release",
       "filePattern": "Herdr-Control-vX.Y.Z.streamDeckPlugin",
-      "reason": "SO1-299 changes packaged Marketplace metadata, action-list artwork, and Property Inspector help. Publish and verify a new version through the standard GitHub release workflow before Marketplace upload."
+      "reason": "SO1-300 stages v0.1.1 with the packaged Marketplace metadata, action-list artwork, and Property Inspector help merged through SO1-299. Publish and verify it through the standard GitHub release workflow before Marketplace upload."
     },
     "lastVerifiedGithubArtifact": {
       "file": "Herdr-Control-v0.1.0.streamDeckPlugin",
