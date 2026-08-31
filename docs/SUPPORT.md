@@ -25,6 +25,18 @@ not evidence that every intermediate version has been tested.
 
 ### GitHub release installation evidence
 
+On 2026-08-31, the published `v0.2.0` installer and checksum were downloaded
+fresh and verified. The exact public asset clean-installed on a separate
+machine and on the development Mac after removing the existing plugin and both
+Herdr profiles. The development-Mac installation reported plugin version
+`0.2.0.0`, automatically imported fresh `HERDR` and `HERDR Plus` profiles, and
+both profiles referenced v0.2.0 actions. Profile activation and the root Agent
+Attention action passed a connected-device smoke test. Before release, Agent
+Attention had also passed blocked, done, working, idle, repeated-focus, and
+cross-pane hardware checks on both supported profiles. This evidence covers
+two-machine installation and the focused Agent Attention release change, not a
+complete repetition of every profile action.
+
 On 2026-08-29, the published `v0.1.0` GitHub installer and checksum were
 downloaded fresh after removing the installed plugin and both Herdr profiles.
 The checksum verified, the package installed as

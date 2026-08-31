@@ -76,6 +76,13 @@ Double-click the profile for the connected device:
 
 Do not import the unpacked profile source directories from the repository.
 
+### Updating bundled profiles
+
+Stream Deck preserves installed profiles when a plugin is updated. If a Herdr
+Control release changes the bundled layouts, delete the existing `HERDR` and
+`HERDR Plus` profiles before reinstalling the plugin to receive the new
+versions. Plugin-only updates do not require replacing the profiles.
+
 ## First use
 
 1. In the Stream Deck app, select a normal profile that you use outside Herdr.
