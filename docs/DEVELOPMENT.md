@@ -101,6 +101,13 @@ Down)**. On the 15-key profile, the adaptive action must leave its static
 profile title unset so runtime feedback can display `SPLIT` or `ZOOM`; the
 direction-specific split icon communicates the configured orientation.
 
+Both root profiles use the hidden Agent action with `role: attention`. It
+reuses the live snapshot refresh and existing agent artwork, prioritizes
+blocked and then unseen done agents for repeated-press focus, and leaves its
+static profile title unset for runtime state and count feedback. The full
+Agents child page remains unchanged and is opened from More. Attention refresh
+must not update the per-device Agents-page index.
+
 ## Packaging
 
 Create a local installer with:
