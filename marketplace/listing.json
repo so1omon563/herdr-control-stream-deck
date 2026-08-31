@@ -46,19 +46,19 @@
     }
   ],
   "release": {
-    "sourceVersion": "0.1.1",
-    "sourceManifestVersion": "0.1.1.0",
-    "notes": "Initial Marketplace release. Includes bundled profiles for the 15-key Stream Deck and Stream Deck +, workspace, tab, pane, and agent navigation, adaptive split-or-zoom behavior, resize controls, common custom keybinding support, and configurable Herdr Command actions.",
+    "sourceVersion": "0.2.0",
+    "sourceManifestVersion": "0.2.0.0",
+    "notes": "Initial Marketplace release. Includes bundled profiles for the 15-key Stream Deck and Stream Deck +, root-level Agent Attention with one-press focus for blocked agents, the full Agents browser under More, workspace, tab, and pane navigation, adaptive split-or-zoom behavior, resize controls, common custom keybinding support, and configurable Herdr Command actions.",
     "submissionArtifact": {
       "status": "pending-next-github-release",
       "filePattern": "Herdr-Control-vX.Y.Z.streamDeckPlugin",
-      "reason": "SO1-300 stages v0.1.1 with the packaged Marketplace metadata, action-list artwork, and Property Inspector help merged through SO1-299. Publish and verify it through the standard GitHub release workflow before Marketplace upload."
+      "reason": "SO1-361 stages v0.2.0 with the merged Agent Attention feature and current Marketplace package. Publish and verify it through the standard GitHub release workflow before Marketplace upload."
     },
     "lastVerifiedGithubArtifact": {
-      "file": "Herdr-Control-v0.1.0.streamDeckPlugin",
-      "url": "https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.0/Herdr-Control-v0.1.0.streamDeckPlugin",
-      "sha256": "c0e9f973a576be46dc1b3c396c0e8503be3b05954747998d11314599d3d09ae2",
-      "checksumUrl": "https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.0/Herdr-Control-v0.1.0.streamDeckPlugin.sha256"
+      "file": "Herdr-Control-v0.1.1.streamDeckPlugin",
+      "url": "https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.1/Herdr-Control-v0.1.1.streamDeckPlugin",
+      "sha256": "82f39dd8d367169dce1d9e6f719a4450dce02925dd2f0992b8c1bb8558715a77",
+      "checksumUrl": "https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.1/Herdr-Control-v0.1.1.streamDeckPlugin.sha256"
     }
   },
   "media": {
