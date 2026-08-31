@@ -2,12 +2,12 @@
 
 ## Release blockers
 
-Herdr Control remains pre-release. The `v0.1.1` GitHub prerelease was published
-through the maintained release workflow and passed an independent new-machine
-clean install. Agent Attention is merged and passed automated validation plus
-connected-device checks on both supported profiles. The next release gate is
-publishing and verifying the staged `v0.2.0` GitHub prerelease through SO1-361.
-Marketplace submission and publication remain separate future work.
+Herdr Control remains pre-release. The `v0.2.0` GitHub prerelease was published
+through the maintained release workflow. Its downloaded installer, checksum,
+manifest, bundled profiles, and clean installation were verified through
+SO1-361 on two machines. Agent Attention passed automated validation and
+connected-device checks on both supported profiles. Marketplace submission and
+publication remain separate future work.
 
 ## Later
 

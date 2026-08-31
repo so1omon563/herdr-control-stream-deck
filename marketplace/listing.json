@@ -50,15 +50,15 @@
     "sourceManifestVersion": "0.2.0.0",
     "notes": "Initial Marketplace release. Includes bundled profiles for the 15-key Stream Deck and Stream Deck +, root-level Agent Attention with one-press focus for blocked agents, the full Agents browser under More, workspace, tab, and pane navigation, adaptive split-or-zoom behavior, resize controls, common custom keybinding support, and configurable Herdr Command actions.",
     "submissionArtifact": {
-      "status": "pending-next-github-release",
+      "status": "verified-github-release",
       "filePattern": "Herdr-Control-vX.Y.Z.streamDeckPlugin",
-      "reason": "SO1-361 stages v0.2.0 with the merged Agent Attention feature and current Marketplace package. Publish and verify it through the standard GitHub release workflow before Marketplace upload."
+      "reason": "The published v0.2.0 installer includes Agent Attention and the current Marketplace package. Its checksum, manifest, bundled profiles, and clean installation were verified through SO1-361."
     },
     "lastVerifiedGithubArtifact": {
-      "file": "Herdr-Control-v0.1.1.streamDeckPlugin",
-      "url": "https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.1/Herdr-Control-v0.1.1.streamDeckPlugin",
-      "sha256": "82f39dd8d367169dce1d9e6f719a4450dce02925dd2f0992b8c1bb8558715a77",
-      "checksumUrl": "https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.1.1/Herdr-Control-v0.1.1.streamDeckPlugin.sha256"
+      "file": "Herdr-Control-v0.2.0.streamDeckPlugin",
+      "url": "https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.2.0/Herdr-Control-v0.2.0.streamDeckPlugin",
+      "sha256": "6ac49a9a88f4d40b67fb54992543adec2d3282370e7e433a8ec127630ccae489",
+      "checksumUrl": "https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v0.2.0/Herdr-Control-v0.2.0.streamDeckPlugin.sha256"
     }
   },
   "media": {

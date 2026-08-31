@@ -43,10 +43,10 @@ to the bumper when no version marker is present, and gates release creation on
 the resolved `#release` request. The pull request title is authoritative even
 when GitHub chooses a squash commit subject from the branch commit instead.
 
-The current highest release tag is `v0.1.1`. Package version `0.2.0` and
-manifest version `0.2.0.0` therefore require `#minor #release`: `#minor`
-produces `v0.2.0`, while `#release` requests the GitHub prerelease. Do not use
-`#patch`, which would target `v0.1.2` and fail the pre-tag metadata check.
+The current highest release tag is `v0.2.0`. Choose the version marker that
+produces the staged package version from that tag, and add `#release` to
+request the GitHub release. A mismatched marker fails the pre-tag metadata
+check.
 
 Immediately before preparing `v0.2.0`, the maintained action majors were
 verified on 2026-08-31: `custom-semver-bumper@v1` resolved to `v1.0.12`, and

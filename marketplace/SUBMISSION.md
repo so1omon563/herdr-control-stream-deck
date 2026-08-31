@@ -34,8 +34,8 @@ core controls, and states the installation requirements.
 
 | Submission field | Repository or release source |
 | --- | --- |
-| Product file | Pending the staged `v0.2.0` GitHub release in SO1-361 |
-| Product checksum | Pending the same release and fresh-download verification |
+| Product file | Published `v0.2.0` GitHub release recorded in `listing.json` |
+| Product checksum | Published SHA-256 recorded in `listing.json` |
 | App icon | `marketplace/exports/app-icon.png` |
 | Thumbnail | `marketplace/exports/thumbnail.png` |
 | Gallery item 1 | `marketplace/exports/gallery-01-dial-focus.png` |
@@ -46,12 +46,10 @@ core controls, and states the installation requirements.
 Upload gallery files in the listed order. Maker Console does not currently
 support reordering gallery items without removing and re-adding them.
 
-The published `v0.1.1` installer remains the last verified baseline, and its
-URL and checksum are recorded in `listing.json`. Do not upload it to
-Marketplace. SO1-361 stages `v0.2.0` with the merged Agent Attention feature
-and current Marketplace package. That version must be published and verified
-through the standard GitHub release workflow before it becomes the submission
-candidate.
+The published `v0.2.0` installer is the verified submission candidate. Its URL
+and checksum are recorded in `listing.json`. SO1-361 verified the downloaded
+asset, checksum, manifest, bundled profiles, and clean installation on two
+machines.
 
 ## Product decisions
 
@@ -97,8 +95,8 @@ explicit authorization after review approval.
   action icons correctly in Stream Deck, and the Setup and support link opened
   the First use documentation on 2026-08-29.
 - [x] Initial release notes are defined.
-- [x] The last verified GitHub release installer and checksum are recorded as
-  a baseline, not as the Marketplace submission candidate.
+- [x] The verified `v0.2.0` GitHub release installer and checksum are recorded
+  as the Marketplace submission candidate.
 - [x] App icon, thumbnail, and three gallery images are mapped and validated.
 - [x] DRM, privacy-policy, and automatic-publication decisions are explicit.
 - [x] Marketplace search found no exact `Herdr Control` product-name conflict
@@ -109,9 +107,8 @@ explicit authorization after review approval.
 - [ ] Add the remaining Maker profile picture in Maker Console.
 - [ ] Create and complete the separately tracked functional demonstration
   video using [`CAPTURE.md`](CAPTURE.md).
-- [ ] Publish and verify staged release `v0.2.0` through SO1-361 and the
-  maintained composite-action workflow. That release needs its own immediate
-  explicit authorization.
+- [x] Publish and verify release `v0.2.0` through SO1-361 and the maintained
+  composite-action workflow.
 - [ ] Reconfirm that `Herdr Control` remains available when creating the
   product draft. Maker Console is authoritative for product-name availability.
 - [ ] Download the new release's exact versioned installer and verify its

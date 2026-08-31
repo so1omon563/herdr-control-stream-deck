@@ -86,8 +86,21 @@ if (listing.product?.name !== pluginManifest.Name || listing.maker?.organization
 if (listing.release?.sourceVersion !== packageManifest.version || listing.release?.sourceManifestVersion !== pluginManifest.Version) {
   throw new Error("Marketplace release versions do not match package metadata");
 }
-if (listing.release?.submissionArtifact?.status !== "pending-next-github-release") {
-  throw new Error("Marketplace submission must remain gated on the next verified GitHub release");
+const artifact = listing.release?.lastVerifiedGithubArtifact;
+const expectedArtifact = `Herdr-Control-v${packageManifest.version}.streamDeckPlugin`;
+const expectedUrl = `https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v${packageManifest.version}/${expectedArtifact}`;
+const submissionStatus = listing.release?.submissionArtifact?.status;
+if (!["pending-next-github-release", "verified-github-release"].includes(submissionStatus)) {
+  throw new Error(`Unsupported Marketplace submission status: ${submissionStatus}`);
+}
+if (
+  submissionStatus === "verified-github-release" &&
+  (artifact?.file !== expectedArtifact ||
+    artifact?.url !== expectedUrl ||
+    artifact?.checksumUrl !== `${expectedUrl}.sha256` ||
+    !/^[0-9a-f]{64}$/.test(artifact?.sha256 ?? ""))
+) {
+  throw new Error("Marketplace submission artifact does not match the current verified release");
 }
 
 const description = listing.product?.description ?? "";
