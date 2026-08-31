@@ -96,7 +96,7 @@ Automation permission the first time they are used. See
 
 | Row | Key 1 | Key 2 | Key 3 | Key 4 | Key 5 |
 | --- | --- | --- | --- | --- | --- |
-| Top | Previous workspace | Next workspace | New workspace | More | Agents |
+| Top | Previous workspace | Next workspace | New workspace | More | Agent attention |
 | Middle | Previous tab | Next tab | New tab | Split right | Split down |
 | Bottom | Previous pane | Next pane | Adaptive Pane | Detach | Back |
 
@@ -107,7 +107,7 @@ one pane. With multiple panes, it changes to Zoom and toggles pane zoom.
 
 | Key row | Key 1 | Key 2 | Key 3 | Key 4 |
 | --- | --- | --- | --- | --- |
-| Top | More | Agents | Rename | Close |
+| Top | More | Agent attention | Rename | Close |
 | Bottom | Split right | Split down | Detach | Back |
 
 | Dial | Rotate | Press |
@@ -119,11 +119,17 @@ one pane. With multiple panes, it changes to Zoom and toggles pane zoom.
 
 ### Shared folders
 
-- **More** contains Spaces, Resize, Settings, and Sidebar.
+- **Agent attention** shows the highest-priority live state and its agent count:
+  Blocked, Done, Working, Idle, or Unknown. Pressing it focuses the next
+  blocked agent, or the next unseen done agent when none are blocked. Repeated
+  presses cycle through agents in that state. It does nothing when no agent
+  needs attention.
+- **More** contains Spaces, Resize, Settings, Sidebar, and Agents.
 - **Resize** contains titleless directional controls for left, up, right, and
   down.
-- **Agents** shows agent type, workspace, and status. Press an occupied slot to
-  focus that agent. Pagination controls appear only when needed.
+- **Agents**, inside More, shows agent type, workspace, and status. Press an
+  occupied slot to focus that agent. Pagination controls appear only when
+  needed.
 - Stream Deck+ **Rename** and **Close** folders target the current workspace,
   tab, or pane. These commands can be added to a 15-key or custom profile with
   the configurable Herdr Command action.

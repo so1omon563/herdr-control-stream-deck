@@ -36,7 +36,7 @@ const key15 = [
   ["workspace-next", "NEXT", "SPACE"],
   ["workspace-new", "NEW", "SPACE"],
   ["more", "MORE"],
-  ["agents", "AGENTS"],
+  ["agents", "BLOCKED", "2"],
   ["tab-previous", "PREV", "TAB"],
   ["tab-next", "NEXT", "TAB"],
   ["tab-new", "NEW", "TAB"],
@@ -51,7 +51,7 @@ const key15 = [
 
 const keyPlus = [
   ["more", "MORE"],
-  ["agents", "AGENTS"],
+  ["agents", "BLOCKED", "2"],
   ["rename", "RENAME"],
   ["close", "CLOSE"],
   ["split-right", "SPLIT", "RIGHT"],
@@ -304,7 +304,7 @@ function conceptAgentFocus() {
     icon("agents", 104, 242, 150),
     text(100, 478, "FIND THE", 60, { weight: 800 }),
     text(100, 548, "RIGHT AGENT.", 60, { weight: 800, fill: colors.yellow }),
-    multiline(104, 638, ["Browse live agents, see status,", "and press to focus the right pane."], 24, { fill: colors.muted, weight: 500, lineHeight: 36 }),
+    multiline(104, 638, ["See blocked work at a glance,", "then press to focus the right pane."], 24, { fill: colors.muted, weight: 500, lineHeight: 36 }),
     `<g transform="translate(1100 100)">${devicePlus(0, 0, 1.35, { agentAccent: true })}</g>`,
     `<rect x="934" y="748" width="820" height="146" rx="22" fill="#0B0E15" stroke="${colors.yellow}" stroke-opacity="0.5" stroke-width="2"/>`,
     dialPanel(954, 770, 780, true),

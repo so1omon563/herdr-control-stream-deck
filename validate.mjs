@@ -243,10 +243,10 @@ assert.deepEqual(standardActions["3,0"].Settings, { ProfileUUID: "19bb5c24-877c-
 assert.equal(standardActions["3,0"].Name, "More");
 assert.equal(standardActions["3,0"].States[0].Title, "MORE");
 assert.equal(standardActions["3,0"].States[0].Image, "Images/more.png");
-assert.equal(standardActions["4,0"].UUID, "com.elgato.streamdeck.profile.openchild");
-assert.deepEqual(standardActions["4,0"].Settings, { ProfileUUID: "8a44c2e0-f4a6-4bd1-a9d8-36a4d39e3001" });
-assert.equal(standardActions["4,0"].States[0].Title, "AGENTS");
-assert.equal(standardActions["4,0"].States[0].Image, "Images/agents.png");
+assert.equal(standardActions["4,0"].UUID, "com.so1omon563.herdr-control.agent");
+assert.deepEqual(standardActions["4,0"].Settings, { role: "attention" });
+assert.equal(standardActions["4,0"].Name, "Agent Attention");
+assert.equal(standardActions["4,0"].States[0].Title, "");
 assert.deepEqual([
   standardActions["0,1"].Settings.command,
   standardActions["1,1"].Settings.command,
@@ -276,16 +276,18 @@ assert.equal(plusManifest.Device.Model, "20GBD9901");
 const plusControllers = JSON.parse(readFileSync(plusPage)).Controllers;
 const plusKeys = plusControllers.find(item => item.Type === "Keypad").Actions;
 const plusDials = plusControllers.find(item => item.Type === "Encoder").Actions;
-assert.deepEqual(Object.values(plusKeys).map(item => item.Settings.command ?? (item.UUID === "com.elgato.streamdeck.profile.openchild" ? item.UUID : "back")), [
-  "com.elgato.streamdeck.profile.openchild", "com.elgato.streamdeck.profile.openchild",
+assert.deepEqual(Object.values(plusKeys).map(item => item.Settings.command ?? item.Settings.role ?? (item.UUID === "com.elgato.streamdeck.profile.openchild" ? item.UUID : "back")), [
+  "com.elgato.streamdeck.profile.openchild", "attention",
   "com.elgato.streamdeck.profile.openchild", "com.elgato.streamdeck.profile.openchild",
   "split-right", "split-down", "detach", "back"
 ]);
 assert.deepEqual(plusKeys["0,0"].Settings, { ProfileUUID: "19bb5c24-877c-4bb0-a517-28079c643101" });
 assert.equal(plusKeys["0,0"].Name, "More");
 assert.equal(plusKeys["0,0"].States[0].Title, "MORE");
-assert.deepEqual(plusKeys["1,0"].Settings, { ProfileUUID: "8a44c2e0-f4a6-4bd1-a9d8-36a4d39e3101" });
-assert.equal(plusKeys["1,0"].States[0].Title, "AGENTS");
+assert.deepEqual(plusKeys["1,0"].Settings, { role: "attention" });
+assert.equal(plusKeys["1,0"].UUID, "com.so1omon563.herdr-control.agent");
+assert.equal(plusKeys["1,0"].Name, "Agent Attention");
+assert.equal(plusKeys["1,0"].States[0].Title, "");
 assert.deepEqual(plusKeys["2,0"].Settings, { ProfileUUID: "6b2c84e0-ad9c-4d13-98e6-5b8fd2b3c401" });
 assert.deepEqual(plusKeys["3,0"].Settings, { ProfileUUID: "3fd8b9a7-1976-4e21-bb12-a1f27947d502" });
 assert.ok(existsSync(join(plusPage, "../Images/rename.png")));
@@ -305,12 +307,15 @@ for (const [file, childProfile] of [
   assert.equal(JSON.parse(readFileSync(file)).Name, "More");
   const actions = keypadActions(file);
   assert.deepEqual(Object.values(actions).map(item => item.Settings?.command ?? (item.UUID === "com.elgato.streamdeck.profile.openchild" ? item.UUID : "back")), [
-    "back", "workspace-picker", "com.elgato.streamdeck.profile.openchild", "settings", "sidebar"
+    "back", "workspace-picker", "com.elgato.streamdeck.profile.openchild", "settings", "sidebar",
+    "com.elgato.streamdeck.profile.openchild"
   ]);
   assert.deepEqual(Object.values(actions)[2].Settings, { ProfileUUID: childProfile });
 }
 assert.equal(keypadActions(standardSpacesPage)["4,0"].Settings.command, "sidebar");
 assert.equal(keypadActions(plusSpacesPage)["0,1"].Settings.command, "sidebar");
+assert.deepEqual(keypadActions(standardSpacesPage)["0,1"].Settings, { ProfileUUID: "8a44c2e0-f4a6-4bd1-a9d8-36a4d39e3001" });
+assert.deepEqual(keypadActions(plusSpacesPage)["1,1"].Settings, { ProfileUUID: "8a44c2e0-f4a6-4bd1-a9d8-36a4d39e3101" });
 for (const file of [standardResizePage, plusResizePage]) {
   const actions = keypadActions(file);
   assert.deepEqual(Object.values(actions).map(item => item.Settings?.command ?? "back"), [
@@ -335,10 +340,10 @@ for (const [file, pageSize, slots] of [
 }
 for (const file of [
   join(root, "profile/2F9C9B72-92B4-4EC1-AB64-BFC50ED6CFD8.sdProfile/Profiles/A2E7C5F3-B9D4-4E1F-8C63-10B6A98D7410/Images/more.png"),
-  join(root, "profile/2F9C9B72-92B4-4EC1-AB64-BFC50ED6CFD8.sdProfile/Profiles/A2E7C5F3-B9D4-4E1F-8C63-10B6A98D7410/Images/agents.png"),
+  join(root, "profile/2F9C9B72-92B4-4EC1-AB64-BFC50ED6CFD8.sdProfile/Profiles/19BB5C24-877C-4BB0-A517-28079C643001/Images/agents.png"),
   join(root, "profile/2F9C9B72-92B4-4EC1-AB64-BFC50ED6CFD8.sdProfile/Profiles/19BB5C24-877C-4BB0-A517-28079C643001/Images/resize.png"),
   join(root, "profile-plus/C7A1F520-4F17-4D6E-8B87-9077A0D2F9C1.sdProfile/Profiles/A2E7C5F3-B9D4-4E1F-8C63-10B6A98D7420/Images/more.png"),
-  join(root, "profile-plus/C7A1F520-4F17-4D6E-8B87-9077A0D2F9C1.sdProfile/Profiles/A2E7C5F3-B9D4-4E1F-8C63-10B6A98D7420/Images/agents.png"),
+  join(root, "profile-plus/C7A1F520-4F17-4D6E-8B87-9077A0D2F9C1.sdProfile/Profiles/19BB5C24-877C-4BB0-A517-28079C643101/Images/agents.png"),
   join(root, "profile-plus/C7A1F520-4F17-4D6E-8B87-9077A0D2F9C1.sdProfile/Profiles/19BB5C24-877C-4BB0-A517-28079C643101/Images/resize.png")
 ]) assert.ok(existsSync(file), `missing profile image ${file}`);
 assert.deepEqual(Object.values(plusDials).map(item => item.Settings.dial), ["workspace", "tabs", "panes", "client"]);
@@ -401,7 +406,7 @@ assert.match(inspector, /Side by side \(Split Right\)/);
 assert.match(inspector, /Stacked \(Split Down\)/);
 assert.match(inspector, /action === ENCODER_UUID/);
 
-const { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence } = require(join(plugin, "plugin.js"));
+const { agentAttentionPresentation, agentAttentionSummary, agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, enqueueAgentAttention, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, selectAttentionAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence } = require(join(plugin, "plugin.js"));
 const { CONFIG_BINDINGS, DEFAULT_BINDINGS, appleScriptKeyLine, commandKeySequence, parseKeyBinding, parseKeyChord, parseKeyConfig, readKeyConfig, resetKeyConfigCache, resolveKeySequence } = require(join(plugin, "keybindings.js"));
 assert.equal(commandForSettings({}), "workspace-next");
 assert.equal(commandForSettings({ command: "unsupported" }), "workspace-next");
@@ -683,6 +688,48 @@ assert.equal(agentForSlot(agentState, 0, 4, 1).pane_id, "p2");
 assert.equal(agentKeyTitle(agentState, agentState.agents[1]), "REVIEWER\nDEVELOPER");
 assert.equal(agentStatusColor(agentState.agents[0]), "#FFD166");
 assert.equal(agentStatusColor(agentState.agents[1]), "#7DF9FF");
+const attentionState = {
+  agents: [
+    { pane_id: "working", agent_status: "working" },
+    { pane_id: "blocked-1", agent_status: "blocked" },
+    { pane_id: "done", agent_status: "done" },
+    { pane_id: "blocked-2", agent_status: "blocked" }
+  ]
+};
+assert.deepEqual(agentAttentionSummary(attentionState), {
+  status: "blocked",
+  agents: [attentionState.agents[1], attentionState.agents[3]]
+});
+assert.equal(selectAttentionAgent(attentionState)?.pane_id, "blocked-1");
+assert.equal(selectAttentionAgent(attentionState, "blocked-1")?.pane_id, "blocked-2");
+assert.equal(selectAttentionAgent(attentionState, "blocked-2")?.pane_id, "blocked-1");
+assert.equal(selectAttentionAgent({ agents: attentionState.agents.filter(agent => agent.agent_status !== "blocked") })?.pane_id, "done");
+assert.equal(selectAttentionAgent({ agents: attentionState.agents.filter(agent => agent.agent_status === "working") }), null);
+assert.equal(agentAttentionPresentation(attentionState).title, "BLOCKED\n2");
+assert.match(agentAttentionPresentation(attentionState).image, /^data:image\/svg\+xml;base64,/);
+assert.deepEqual(agentAttentionPresentation({ agents: [] }), {
+  title: "NO\nAGENTS",
+  image: "images/agents-empty.svg"
+});
+assert.equal(agentKeyPresentation(attentionState, { role: "attention" }).title, "BLOCKED\n2");
+const attentionQueueOrder = [];
+let releaseAttentionQueue;
+const firstAttentionPress = enqueueAgentAttention("validation", async () => {
+  attentionQueueOrder.push("first:start");
+  await new Promise(resolve => { releaseAttentionQueue = resolve; });
+  attentionQueueOrder.push("first:end");
+});
+await Promise.resolve();
+const secondAttentionPress = enqueueAgentAttention("validation", async () => {
+  attentionQueueOrder.push("second");
+});
+assert.deepEqual(attentionQueueOrder, ["first:start"]);
+releaseAttentionQueue();
+await Promise.all([firstAttentionPress, secondAttentionPress]);
+assert.deepEqual(attentionQueueOrder, ["first:start", "first:end", "second"]);
+assert.match(source, /settings\.role === "attention"[\s\S]*?selectAttentionAgent\(state, agentSelections\.get\(context\)\)[\s\S]*?\["agent", "focus", agent\.pane_id\]/);
+assert.match(source, /settings\.role === "attention"[\s\S]*?setAgentPresentation\(context, agentKeyPresentation\(state, settings\)\);[\s\S]*?continue;/);
+assert.match(source, /message\.action === AGENT_UUID[\s\S]*?agentActionSettings\(settings\)\.role === "attention"[\s\S]*?enqueueAgentAttention\(message\.context/);
 const manyAgents = {
   ...agentState,
   agents: Array.from({ length: 11 }, (_, index) => ({

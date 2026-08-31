@@ -15,7 +15,7 @@
       "source": "marketplace/concepts/01-control-surface.svg",
       "width": 1920,
       "height": 960,
-      "sha256": "e8e77ecca17848b75df440794a4dd0b0214e2da9c5ee8f73d47ebbbeec761782"
+      "sha256": "808f83390a9311373484447c06fe8b39123fa80c0758e1052a39927852bf139b"
     },
     {
       "file": "gallery-01-dial-focus.png",
@@ -23,7 +23,7 @@
       "source": "marketplace/concepts/02-dial-focus.svg",
       "width": 1920,
       "height": 960,
-      "sha256": "0e44bfaa2f3e0b0278d1d464b7ac8e066df30bf05b5fc6de29ed7ae644204de8"
+      "sha256": "039b88b44d7c5d5aa8f48d9f08aaeba876bdc1a94192223907dd9e1738a85585"
     },
     {
       "file": "gallery-02-profile-parity.png",
@@ -31,7 +31,7 @@
       "source": "marketplace/concepts/03-profile-parity.svg",
       "width": 1920,
       "height": 960,
-      "sha256": "c2b8de7ad0478f259dc4d509b0fe40ca27592340befbc75cba4ee31916b4e08a"
+      "sha256": "72ae2525b81aa7d7c9f0717f332d6f5ce4a9f3500a93a55be8ab53710f5cbe26"
     },
     {
       "file": "gallery-03-agent-focus.png",
@@ -39,7 +39,7 @@
       "source": "marketplace/concepts/04-agent-focus.svg",
       "width": 1920,
       "height": 960,
-      "sha256": "20b42d2f0986479da371ff4ba4003fd7e7affa1e6aabfbdda58aee85f751fb0c"
+      "sha256": "4855e9613db5db076e3b1b15f0642136ab721a5c718bfa13340768861bf20530"
     }
   ]
 }

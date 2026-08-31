@@ -18,9 +18,10 @@ capture ticket.
 1. Show Herdr Control installed in Stream Deck.
 2. Demonstrate workspace, tab, and pane navigation on Stream Deck +.
 3. Rotate and press the four dials, including adaptive split-or-zoom behavior.
-4. Browse agents and press to focus a selected agent pane.
-5. Show the equivalent primary navigation and Agents folder on the 15-key
-   Stream Deck.
+4. Show blocked and completed work on the Agent Attention key, then press it
+   to focus an actionable agent pane.
+5. Show the equivalent primary navigation on the 15-key Stream Deck, then open
+   More and browse the full Agents folder.
 6. End on both supported profiles and the Herdr Control mark.
 
 ## Capture checks

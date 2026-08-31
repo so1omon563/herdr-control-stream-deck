@@ -548,6 +548,7 @@ const AGENT_STATUS_COLORS = {
   done: "#7DFFB2",
   unknown: "#8A8F98"
 };
+const AGENT_ATTENTION_ORDER = ["blocked", "done", "working", "idle", "unknown"];
 
 function agentStatus(agent) {
   const status = String(agent?.agent_status ?? "unknown").toLowerCase();
@@ -604,8 +605,32 @@ function agentKeyImage(agent, focusedPaneId) {
   return `data:image/svg+xml;base64,${Buffer.from(svg).toString("base64")}`;
 }
 
+function agentAttentionSummary(state) {
+  const agents = state?.agents ?? [];
+  for (const status of AGENT_ATTENTION_ORDER) {
+    const matching = agents.filter(agent => agentStatus(agent) === status);
+    if (matching.length) return { status, agents: matching };
+  }
+  return { status: null, agents: [] };
+}
+
+function selectAttentionAgent(state, selectedPaneId) {
+  const summary = agentAttentionSummary(state);
+  if (summary.status !== "blocked" && summary.status !== "done") return null;
+  return adjacent(summary.agents, selectedPaneId, "pane_id", 1);
+}
+
+function agentAttentionPresentation(state) {
+  const summary = agentAttentionSummary(state);
+  if (!summary.status) return { title: "NO\nAGENTS", image: "images/agents-empty.svg" };
+  return {
+    title: `${summary.status.toUpperCase()}\n${summary.agents.length}`,
+    image: agentKeyImage(summary.agents[0])
+  };
+}
+
 function agentActionSettings(settings = {}) {
-  const role = ["agent", "prev", "page", "next"].includes(settings.role) ? settings.role : "agent";
+  const role = ["agent", "attention", "prev", "page", "next"].includes(settings.role) ? settings.role : "agent";
   const pageSize = [4, 10].includes(Number(settings.pageSize)) ? Number(settings.pageSize) : 4;
   const slot = Number.isInteger(Number(settings.slot)) && Number(settings.slot) >= 0
     ? Number(settings.slot)
@@ -632,6 +657,7 @@ function agentForSlot(state, page, pageSize, slot) {
 
 function agentKeyPresentation(state, settings, page = 0) {
   const { role, pageSize, slot } = agentActionSettings(settings);
+  if (role === "attention") return agentAttentionPresentation(state);
   const agents = state?.agents ?? [];
   const normalizedPage = normalizeAgentPage(page, agents.length, pageSize);
   const pages = agentPageCount(agents.length, pageSize);
@@ -852,6 +878,7 @@ const adaptivePaneKeyBusy = new Set();
 const workspacePickerOpenClients = new Set();
 const agentSelections = new Map();
 const agentPages = new Map();
+const agentAttentionQueues = new Map();
 let busy = false;
 let workspacePickerBusy = false;
 let lastAttachedState = -1;
@@ -1088,6 +1115,10 @@ function refreshAgentKeys(state) {
   const contexts = [...contextInfo.entries()].filter(([, info]) => info.action === AGENT_UUID);
   for (const [context, info] of contexts) {
     const settings = agentActionSettings(info.settings);
+    if (settings.role === "attention") {
+      setAgentPresentation(context, agentKeyPresentation(state, settings));
+      continue;
+    }
     const agentCount = state?.agents?.length ?? 0;
     const page = normalizeAgentPage(agentPages.get(info.device), agentCount, settings.pageSize);
     agentPages.set(info.device, page);
@@ -1177,6 +1208,15 @@ async function runAgentKey(context, rawSettings) {
   let state;
   try {
     state = await snapshot();
+    if (settings.role === "attention") {
+      const agent = selectAttentionAgent(state, agentSelections.get(context));
+      if (!agent) return;
+      agentSelections.set(context, agent.pane_id);
+      await run(herdrExecutable(), ["agent", "focus", agent.pane_id]);
+      showOk(context);
+      await refreshLiveFeedbacks();
+      return;
+    }
     const agentCount = state?.agents?.length ?? 0;
     const page = normalizeAgentPage(agentPages.get(info?.device), agentCount, settings.pageSize);
     if (settings.role === "prev" || settings.role === "page" || settings.role === "next") {
@@ -1195,6 +1235,17 @@ async function runAgentKey(context, rawSettings) {
   } catch (error) {
     showError(context, error, info?.agentTitle ?? "AGENT");
   }
+}
+
+function enqueueAgentAttention(context, task) {
+  const previous = agentAttentionQueues.get(context) ?? Promise.resolve();
+  const queued = previous.then(task, task);
+  const clear = () => {
+    if (agentAttentionQueues.get(context) === queued) agentAttentionQueues.delete(context);
+  };
+  agentAttentionQueues.set(context, queued);
+  queued.then(clear, clear);
+  return queued;
 }
 
 async function runEncoder(context, dial, event, payload) {
@@ -1315,7 +1366,12 @@ function connectPlugin() {
       }
       else if (message.action === BACK_UUID) returnToPreviousProfile(message.context);
       else if (message.action === AGENT_UUID) {
-        runAgentKey(message.context, message.payload?.settings ?? contextInfo.get(message.context)?.settings);
+        const settings = message.payload?.settings ?? contextInfo.get(message.context)?.settings;
+        if (agentActionSettings(settings).role === "attention") {
+          enqueueAgentAttention(message.context, () => runAgentKey(message.context, settings));
+        } else {
+          runAgentKey(message.context, settings);
+        }
       }
     } else if (message.action === ENCODER_UUID && ["dialRotate", "dialUp", "touchTap"].includes(message.event)) {
       const dial = message.payload?.settings?.dial ?? contextInfo.get(message.context)?.settings?.dial;
@@ -1324,5 +1380,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence };
+module.exports = { agentAttentionPresentation, agentAttentionSummary, agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, enqueueAgentAttention, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, selectAttentionAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence };
 if (require.main === module) connectPlugin();

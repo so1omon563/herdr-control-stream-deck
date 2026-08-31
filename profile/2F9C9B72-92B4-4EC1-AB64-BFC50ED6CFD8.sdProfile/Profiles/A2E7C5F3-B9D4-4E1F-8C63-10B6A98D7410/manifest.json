@@ -30,11 +30,11 @@
       "UUID": "com.elgato.streamdeck.profile.openchild"
     },
     "4,0": {
-      "Name": "Agents",
-      "Settings": { "ProfileUUID": "8a44c2e0-f4a6-4bd1-a9d8-36a4d39e3001" },
+      "Name": "Agent Attention",
+      "Settings": { "role": "attention" },
       "State": 0,
-      "States": [{ "Title": "AGENTS", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12, "Image": "Images/agents.png" }],
-      "UUID": "com.elgato.streamdeck.profile.openchild"
+      "States": [{ "Title": "", "TitleAlignment": "bottom", "TitleColor": "#ffffff", "ShowTitle": true, "FontSize": 12 }],
+      "UUID": "com.so1omon563.herdr-control.agent"
     },
     "0,1": {
       "Name": "Previous Tab",
