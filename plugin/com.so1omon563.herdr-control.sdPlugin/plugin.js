@@ -878,6 +878,7 @@ const adaptivePaneKeyBusy = new Set();
 const workspacePickerOpenClients = new Set();
 const agentSelections = new Map();
 const agentPages = new Map();
+const agentAttentionQueues = new Map();
 let busy = false;
 let workspacePickerBusy = false;
 let lastAttachedState = -1;
@@ -1236,6 +1237,17 @@ async function runAgentKey(context, rawSettings) {
   }
 }
 
+function enqueueAgentAttention(context, task) {
+  const previous = agentAttentionQueues.get(context) ?? Promise.resolve();
+  const queued = previous.then(task, task);
+  const clear = () => {
+    if (agentAttentionQueues.get(context) === queued) agentAttentionQueues.delete(context);
+  };
+  agentAttentionQueues.set(context, queued);
+  queued.then(clear, clear);
+  return queued;
+}
+
 async function runEncoder(context, dial, event, payload) {
   if (encoderBusy.has(context)) return;
   if (dial === "client" && (event === "dialRotate" || event === "dialUp")) {
@@ -1354,7 +1366,12 @@ function connectPlugin() {
       }
       else if (message.action === BACK_UUID) returnToPreviousProfile(message.context);
       else if (message.action === AGENT_UUID) {
-        runAgentKey(message.context, message.payload?.settings ?? contextInfo.get(message.context)?.settings);
+        const settings = message.payload?.settings ?? contextInfo.get(message.context)?.settings;
+        if (agentActionSettings(settings).role === "attention") {
+          enqueueAgentAttention(message.context, () => runAgentKey(message.context, settings));
+        } else {
+          runAgentKey(message.context, settings);
+        }
       }
     } else if (message.action === ENCODER_UUID && ["dialRotate", "dialUp", "touchTap"].includes(message.event)) {
       const dial = message.payload?.settings?.dial ?? contextInfo.get(message.context)?.settings?.dial;
@@ -1363,5 +1380,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentAttentionPresentation, agentAttentionSummary, agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, selectAttentionAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence };
+module.exports = { agentAttentionPresentation, agentAttentionSummary, agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, enqueueAgentAttention, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, selectAttentionAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence };
 if (require.main === module) connectPlugin();

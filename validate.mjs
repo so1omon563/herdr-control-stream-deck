@@ -406,7 +406,7 @@ assert.match(inspector, /Side by side \(Split Right\)/);
 assert.match(inspector, /Stacked \(Split Down\)/);
 assert.match(inspector, /action === ENCODER_UUID/);
 
-const { agentAttentionPresentation, agentAttentionSummary, agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, selectAttentionAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence } = require(join(plugin, "plugin.js"));
+const { agentAttentionPresentation, agentAttentionSummary, agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, enqueueAgentAttention, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, selectAttentionAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence } = require(join(plugin, "plugin.js"));
 const { CONFIG_BINDINGS, DEFAULT_BINDINGS, appleScriptKeyLine, commandKeySequence, parseKeyBinding, parseKeyChord, parseKeyConfig, readKeyConfig, resetKeyConfigCache, resolveKeySequence } = require(join(plugin, "keybindings.js"));
 assert.equal(commandForSettings({}), "workspace-next");
 assert.equal(commandForSettings({ command: "unsupported" }), "workspace-next");
@@ -712,8 +712,24 @@ assert.deepEqual(agentAttentionPresentation({ agents: [] }), {
   image: "images/agents-empty.svg"
 });
 assert.equal(agentKeyPresentation(attentionState, { role: "attention" }).title, "BLOCKED\n2");
+const attentionQueueOrder = [];
+let releaseAttentionQueue;
+const firstAttentionPress = enqueueAgentAttention("validation", async () => {
+  attentionQueueOrder.push("first:start");
+  await new Promise(resolve => { releaseAttentionQueue = resolve; });
+  attentionQueueOrder.push("first:end");
+});
+await Promise.resolve();
+const secondAttentionPress = enqueueAgentAttention("validation", async () => {
+  attentionQueueOrder.push("second");
+});
+assert.deepEqual(attentionQueueOrder, ["first:start"]);
+releaseAttentionQueue();
+await Promise.all([firstAttentionPress, secondAttentionPress]);
+assert.deepEqual(attentionQueueOrder, ["first:start", "first:end", "second"]);
 assert.match(source, /settings\.role === "attention"[\s\S]*?selectAttentionAgent\(state, agentSelections\.get\(context\)\)[\s\S]*?\["agent", "focus", agent\.pane_id\]/);
 assert.match(source, /settings\.role === "attention"[\s\S]*?setAgentPresentation\(context, agentKeyPresentation\(state, settings\)\);[\s\S]*?continue;/);
+assert.match(source, /message\.action === AGENT_UUID[\s\S]*?agentActionSettings\(settings\)\.role === "attention"[\s\S]*?enqueueAgentAttention\(message\.context/);
 const manyAgents = {
   ...agentState,
   agents: Array.from({ length: 11 }, (_, index) => ({
