@@ -125,7 +125,7 @@ For a versioned installer and SHA-256 checksum, use the matching repository
 version and numeric SemVer tag:
 
 ```sh
-npm run build:release -- v0.1.1
+npm run build:release -- v0.2.0
 ```
 
 This remains a local build. The marker-driven GitHub workflow, authorization

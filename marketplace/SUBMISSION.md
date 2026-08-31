@@ -34,7 +34,7 @@ core controls, and states the installation requirements.
 
 | Submission field | Repository or release source |
 | --- | --- |
-| Product file | Pending the staged `v0.1.1` GitHub release in SO1-300 |
+| Product file | Pending the staged `v0.2.0` GitHub release in SO1-361 |
 | Product checksum | Pending the same release and fresh-download verification |
 | App icon | `marketplace/exports/app-icon.png` |
 | Thumbnail | `marketplace/exports/thumbnail.png` |
@@ -46,12 +46,12 @@ core controls, and states the installation requirements.
 Upload gallery files in the listed order. Maker Console does not currently
 support reordering gallery items without removing and re-adding them.
 
-The published `v0.1.0` installer remains the last verified baseline, and its
+The published `v0.1.1` installer remains the last verified baseline, and its
 URL and checksum are recorded in `listing.json`. Do not upload it to
-Marketplace. SO1-300 stages `v0.1.1` with the catalog icons, metadata, and
-Property Inspector help merged through SO1-299. That version must be published
-and verified through the standard GitHub release workflow before it becomes
-the submission candidate.
+Marketplace. SO1-361 stages `v0.2.0` with the merged Agent Attention feature
+and current Marketplace package. That version must be published and verified
+through the standard GitHub release workflow before it becomes the submission
+candidate.
 
 ## Product decisions
 
@@ -109,7 +109,7 @@ explicit authorization after review approval.
 - [ ] Add the remaining Maker profile picture in Maker Console.
 - [ ] Create and complete the separately tracked functional demonstration
   video using [`CAPTURE.md`](CAPTURE.md).
-- [ ] Publish and verify staged release `v0.1.1` through SO1-300 and the
+- [ ] Publish and verify staged release `v0.2.0` through SO1-361 and the
   maintained composite-action workflow. That release needs its own immediate
   explicit authorization.
 - [ ] Reconfirm that `Herdr Control` remains available when creating the

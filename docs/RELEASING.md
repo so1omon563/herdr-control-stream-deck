@@ -43,13 +43,13 @@ to the bumper when no version marker is present, and gates release creation on
 the resolved `#release` request. The pull request title is authoritative even
 when GitHub chooses a squash commit subject from the branch commit instead.
 
-The current highest release tag is `v0.1.0`. Package version `0.1.1` and
-manifest version `0.1.1.0` therefore require `#patch #release`: `#patch`
-produces `v0.1.1`, while `#release` requests the GitHub prerelease. Do not use
-`#minor`, which would target `v0.2.0` and fail the pre-tag metadata check.
+The current highest release tag is `v0.1.1`. Package version `0.2.0` and
+manifest version `0.2.0.0` therefore require `#minor #release`: `#minor`
+produces `v0.2.0`, while `#release` requests the GitHub prerelease. Do not use
+`#patch`, which would target `v0.1.2` and fail the pre-tag metadata check.
 
-Immediately before preparing `v0.1.1`, the maintained action majors were
-verified on 2026-08-29: `custom-semver-bumper@v1` resolved to `v1.0.12`, and
+Immediately before preparing `v0.2.0`, the maintained action majors were
+verified on 2026-08-31: `custom-semver-bumper@v1` resolved to `v1.0.12`, and
 `release-creator@v2` resolved to `v2.0.2`.
 
 Before the tag-writing action runs, the workflow applies the bumper's hashtag

@@ -4,11 +4,10 @@
 
 Herdr Control remains pre-release. The `v0.1.1` GitHub prerelease was published
 through the maintained release workflow and passed an independent new-machine
-clean install. Before Marketplace work resumes, the root profiles must surface
-agent attention and provide one-press focus for blocked and unseen done agents.
-That change requires automated validation, connected-device checks on both
-supported profiles, and a new verified GitHub release candidate. Marketplace
-submission and publication remain separate future work.
+clean install. Agent Attention is merged and passed automated validation plus
+connected-device checks on both supported profiles. The next release gate is
+publishing and verifying the staged `v0.2.0` GitHub prerelease through SO1-361.
+Marketplace submission and publication remain separate future work.
 
 ## Later
 
