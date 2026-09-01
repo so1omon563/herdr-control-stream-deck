@@ -21,6 +21,6 @@
     "fontkit": "2.0.4"
   },
   "dependencies": {
-    "smol-toml": "1.7.1"
+    "smol-toml": "1.8.0"
   }
 }
