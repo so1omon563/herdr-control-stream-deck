@@ -48,7 +48,12 @@ assert.match(packageManifest.version, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)
 assert.equal(packageLock.version, packageManifest.version);
 assert.equal(packageLock.packages[""].version, packageManifest.version);
 assert.equal(packageManifest.license, "MIT");
-assert.equal(packageManifest.dependencies["smol-toml"], "1.7.1");
+const tomlVersion = packageManifest.dependencies["smol-toml"];
+assert.match(tomlVersion, /^(0|[1-9]\d*)\.(0|[1-9]\d*)\.(0|[1-9]\d*)$/, "smol-toml must be exact-pinned");
+assert.equal(packageLock.packages[""].dependencies["smol-toml"], tomlVersion);
+assert.equal(packageLock.packages["node_modules/smol-toml"].version, tomlVersion);
+const tomlDependency = join(root, "node_modules", "smol-toml");
+assert.equal(JSON.parse(readFileSync(join(tomlDependency, "package.json"))).version, tomlVersion);
 const readme = readFileSync(join(root, "README.md"), "utf8");
 const releaseAsset = `Herdr-Control-v${packageManifest.version}.streamDeckPlugin`;
 const releaseUrl = `https://github.com/so1omon563/herdr-control-stream-deck/releases/download/v${packageManifest.version}/${releaseAsset}`;
@@ -77,14 +82,21 @@ assert.equal(readFileSync(join(plugin, "LICENSE"), "utf8"), license);
 assert.match(license, /Copyright \(c\) 2026 Jedidiah Foster/);
 for (const [vendored, installed] of [
   ["smol-toml.cjs", "dist/index.cjs"],
-  ["smol-toml.cjs.map", "dist/index.cjs.map"],
   ["smol-toml.LICENSE", "LICENSE"]
 ]) {
   assert.deepEqual(
     readFileSync(join(plugin, "vendor", vendored)),
-    readFileSync(join(root, "node_modules", "smol-toml", installed)),
+    readFileSync(join(tomlDependency, installed)),
     `${vendored} is not synchronized; run npm run build:vendor`
   );
+}
+const installedTomlMap = join(tomlDependency, "dist/index.cjs.map");
+const vendoredTomlMap = join(plugin, "vendor/smol-toml.cjs.map");
+assert.equal(existsSync(vendoredTomlMap), existsSync(installedTomlMap),
+  "smol-toml source map is not synchronized; run npm run build:vendor");
+if (existsSync(installedTomlMap)) {
+  assert.deepEqual(readFileSync(vendoredTomlMap), readFileSync(installedTomlMap),
+    "smol-toml source map is not synchronized; run npm run build:vendor");
 }
 
 const pluginManifest = JSON.parse(readFileSync(join(plugin, "manifest.json")));
@@ -600,6 +612,27 @@ show_agent_labels_on_pane_borders = true
 });
 assert.deepEqual(parseKeyConfig("keys.workspace_picker = \"ctrl+alt+w\""), { workspace_picker: "ctrl+alt+w" });
 assert.deepEqual(parseKeyConfig("keys = { workspace_picker = \"ctrl+alt+w\" }"), { workspace_picker: "ctrl+alt+w" });
+const nullPrototypeConfig = `
+[keys]
+prefix = "f12"
+workspace_picker = ["hyper+w", "prefix+w"]
+__proto__ = { workspace_picker = "cmd+p" }
+constructor = "ignored"
+toString = "ignored"
+`;
+const parsedToml = require(join(plugin, "vendor/smol-toml.cjs")).parse(nullPrototypeConfig);
+assert.equal(Object.getPrototypeOf(parsedToml), null);
+assert.equal(Object.getPrototypeOf(parsedToml.keys), null);
+const normalizedKeys = parseKeyConfig(nullPrototypeConfig);
+assert.deepEqual(normalizedKeys, {
+  prefix: "f12",
+  workspace_picker: ["hyper+w", "prefix+w"]
+});
+assert.equal(Object.getPrototypeOf(normalizedKeys), Object.prototype);
+assert.deepEqual(resolveKeySequence("workspace-picker", normalizedKeys), [
+  { keyCode: 111, modifiers: [] },
+  { keyCode: 13, modifiers: [] }
+]);
 assert.throws(() => parseKeyConfig("[keys\nworkspace_picker = \"prefix+w\""));
 assert.equal(appleScriptKeyLine({ keyCode: 13 }), "key code 13");
 assert.equal(

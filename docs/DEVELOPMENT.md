@@ -65,6 +65,8 @@ npm run build:vendor
 Do not hand-edit the vendored files. `npm test` compares them byte for byte
 with the installed dependency so dependency updates cannot silently leave the
 packaged parser stale.
+Source maps are copied only when the dependency ships one; refreshing a version
+without a source map removes any stale vendored map.
 
 `keybindings.js` caches the parsed Herdr keys table using the config path and
 file metadata. A missing config uses documented defaults. Any unreadable,
