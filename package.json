@@ -11,7 +11,7 @@
     "build:vendor": "zsh scripts/build-vendor.zsh",
     "validate:streamdeck": "streamdeck validate plugin/com.so1omon563.herdr-control.sdPlugin --no-update-check",
     "pack:streamdeck": "streamdeck pack plugin/com.so1omon563.herdr-control.sdPlugin --output dist --force --no-update-check --no-file-list",
-    "test": "node validate.mjs && node scripts/validate-marketplace-assets.mjs",
+    "test": "node validate.mjs && node scripts/test-targets.mjs && node scripts/test-remote-terminal.mjs && node scripts/test-property-inspector.mjs && node scripts/test-runtime-routing.mjs && node scripts/validate-marketplace-assets.mjs",
     "validate:marketplace": "node scripts/validate-marketplace-assets.mjs"
   },
   "devDependencies": {

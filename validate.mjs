@@ -398,7 +398,7 @@ const inspector = readFileSync(join(plugin, "property-inspector.html"), "utf8");
 for (const terminal of ["auto", "ghostty", "kitty", "iterm", "terminal"]) {
   assert.ok(inspector.includes(`value="${terminal}"`), `missing terminal option ${terminal}`);
 }
-const commandSelect = inspector.match(/<select id="command">([\s\S]*?)<\/select>/)?.[1];
+const commandSelect = inspector.match(/<select id="command"[^>]*>([\s\S]*?)<\/select>/)?.[1];
 assert.ok(commandSelect, "missing command selector");
 assert.deepEqual([...commandSelect.matchAll(/<option value="([^"]+)">/g)].map(match => match[1]), [
   "workspace-next", "workspace-prev", "workspace-new", "workspace-picker",
@@ -760,8 +760,8 @@ assert.deepEqual(attentionQueueOrder, ["first:start"]);
 releaseAttentionQueue();
 await Promise.all([firstAttentionPress, secondAttentionPress]);
 assert.deepEqual(attentionQueueOrder, ["first:start", "first:end", "second"]);
-assert.match(source, /settings\.role === "attention"[\s\S]*?selectAttentionAgent\(state, agentSelections\.get\(context\)\)[\s\S]*?\["agent", "focus", agent\.pane_id\]/);
-assert.match(source, /settings\.role === "attention"[\s\S]*?setAgentPresentation\(context, agentKeyPresentation\(state, settings\)\);[\s\S]*?continue;/);
+assert.match(source, /settings\.role === "attention"[\s\S]*?selectAttentionAgent\(state, agentSelections\.get\(selectionKey\)\)[\s\S]*?focusAgent\(state, agent\.pane_id, target\)/);
+assert.match(source, /settings\.role === "attention"[\s\S]*?setAgentPresentation\(context, decorate\(agentKeyPresentation\(state, settings\)\)\);[\s\S]*?continue;/);
 assert.match(source, /message\.action === AGENT_UUID[\s\S]*?agentActionSettings\(settings\)\.role === "attention"[\s\S]*?enqueueAgentAttention\(message\.context/);
 const manyAgents = {
   ...agentState,

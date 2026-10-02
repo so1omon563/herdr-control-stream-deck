@@ -3,6 +3,8 @@ const { existsSync } = require("node:fs");
 const os = require("node:os");
 const path = require("node:path");
 const { appleScriptKeyLine, commandKeySequence } = require("./keybindings.js");
+const { createTargetRouter, scopedKey, targetError, targetFeedback } = require("./targets.js");
+const { createRemoteTerminalController } = require("./remote-terminal.js");
 
 const TOGGLE_UUID = "com.so1omon563.herdr-control.toggle";
 const COMMAND_UUID = "com.so1omon563.herdr-control.command";
@@ -185,7 +187,8 @@ function initialDevices() {
 function run(file, args, timeoutMs = 15000) {
   return new Promise((resolve, reject) => {
     let timedOut = false;
-    const child = execFile(file, args, (error, stdout, stderr) => {
+    // Kill the child on timeout even if it ignores SIGTERM; bound buffered output too.
+    const child = execFile(file, args, { maxBuffer: 4 * 1024 * 1024, detached: true }, (error, stdout, stderr) => {
       clearTimeout(timer);
       if (error) {
         if (timedOut) error.message = `${file} timed out after ${timeoutMs}ms`;
@@ -197,7 +200,13 @@ function run(file, args, timeoutMs = 15000) {
     });
     const timer = setTimeout(() => {
       timedOut = true;
-      child.kill("SIGTERM");
+      // Herdr can have an SSH child holding its pipes open. Kill our own process
+      // group so a timed-out poll cannot leave unbounded SSH processes behind.
+      try {
+        if (child.pid) process.kill(-child.pid, "SIGKILL");
+        else child.kill("SIGKILL");
+      } catch { child.kill("SIGKILL"); }
+      reject(new Error(`${file} timed out after ${timeoutMs}ms`));
     }, timeoutMs);
   });
 }
@@ -254,8 +263,16 @@ async function iTermTtys() {
   return output.split("\n").filter(Boolean);
 }
 
-function herdrPidForTty(tty) {
-  return firstPid(["-t", path.basename(tty), "-x", "herdr"]);
+function isLocalHerdrCommand(command, executable = herdrExecutable()) {
+  return command.trim() === executable || command.trim() === "herdr";
+}
+
+async function herdrPidForTty(tty) {
+  for (const pid of await pids(["-t", path.basename(tty), "-x", "herdr"])) {
+    const command = await run("/bin/ps", ["-p", pid, "-o", "args="], 5000);
+    if (isLocalHerdrCommand(command)) return pid;
+  }
+  return null;
 }
 
 async function clientsForTerminal(terminal) {
@@ -264,12 +281,8 @@ async function clientsForTerminal(terminal) {
     return (await pids(["-f", processTerminalPattern(terminal)]))
       .map(id => ({ terminal, id }));
   }
-  if (terminal === "terminal") {
-    return (await terminalTtys()).map(id => ({ terminal, id }));
-  }
-
   const clients = [];
-  for (const tty of await iTermTtys()) {
+  for (const tty of await (terminal === "terminal" ? terminalTtys() : iTermTtys())) {
     if (await herdrPidForTty(tty)) clients.push({ terminal, id: tty });
   }
   return clients;
@@ -487,8 +500,9 @@ async function terminalForLaunch(preference = terminalPreference, isInstalled = 
   return terminal;
 }
 
-async function attach() {
+async function attach(target) {
   const terminal = await terminalForLaunch();
+  targets.assertCurrent(target);
   if (terminal === "ghostty" || terminal === "kitty") {
     const args = ["-u", "NO_COLOR", "/usr/bin/open", "-na", terminalApp(terminal), "--args"];
     if (terminal === "ghostty") args.push("-e");
@@ -514,9 +528,42 @@ async function attach() {
   await run("/usr/bin/osascript", ["-e", script, herdrExecutable()]);
 }
 
-async function snapshot() {
-  const response = JSON.parse(await run(herdrExecutable(), ["api", "snapshot"]));
-  return response.result.snapshot;
+const targets = createTargetRouter({ run, executable: herdrExecutable });
+// No control may default to Local before Stream Deck delivers persisted settings.
+targets.select({});
+const remoteTerminals = createRemoteTerminalController({ run, herdrExecutable, terminalForLaunch, terminalApp });
+
+async function snapshot(target = targets.capture(), fresh = false) {
+  return targets.snapshot(target, { fresh });
+}
+
+async function selectedClients(target = targets.capture()) {
+  targets.assertCurrent(target);
+  if (target.machineId === null) {
+    const clients = await attachedClients();
+    targets.assertCurrent(target);
+    return clients;
+  }
+  const machine = await targets.resolveMachine(target);
+  targets.assertCurrent(target);
+  activeMachineLabel = machine.label || machine.id;
+  renderTargetControls();
+  const client = await remoteTerminals.find({ machine, terminalPreference, isCurrent: () => targets.isCurrent(target) });
+  targets.assertCurrent(target);
+  return client ? [client] : [];
+}
+
+async function focusAgent(state, paneId, target) {
+  await targets.focusAgent(state, paneId, async machine => {
+    if (machine) await remoteTerminals.open({ machine, terminalPreference, isCurrent: () => targets.isCurrent(target) });
+  });
+}
+
+function runLocal(target, args) {
+  targets.assertCurrent(target);
+  if (target.machineId !== null) throw targetError("HERDR_REMOTE_UNSUPPORTED", "This control is local-only.");
+  targets.invalidate();
+  return run(herdrExecutable(), args);
 }
 
 function adjacent(items, currentId, idKey, delta) {
@@ -687,10 +734,14 @@ function agentKeyPresentation(state, settings, page = 0) {
   };
 }
 
-async function sendKeySequence(sequence, client) {
+async function sendKeySequence(sequence, client, target = targets.capture()) {
+  targets.assertCurrent(target);
+  if (target.machineId !== null) throw targetError("HERDR_REMOTE_UNSUPPORTED", "Remote UI shortcuts are unavailable.");
   client ??= await attachedClient();
   if (!client) throw new Error("HERDR client is not attached");
+  targets.assertCurrent(target);
   await focusClient(client);
+  targets.assertCurrent(target);
   const keyLines = sequence.flatMap((chord, index) => (
     index + 1 < sequence.length
       ? [appleScriptKeyLine(chord), "delay 0.08"]
@@ -711,7 +762,7 @@ function workspacePickerSequence(isOpen, resolveOpenSequence) {
   return isOpen ? ESCAPE_KEY_SEQUENCE : resolveOpenSequence();
 }
 
-async function toggleWorkspacePicker() {
+async function toggleWorkspacePicker(target) {
   if (workspacePickerBusy) return false;
   workspacePickerBusy = true;
   try {
@@ -720,7 +771,7 @@ async function toggleWorkspacePicker() {
     const key = clientKey(client);
     const isOpen = workspacePickerOpenClients.has(key);
     const sequence = workspacePickerSequence(isOpen, () => commandKeySequence("workspace-picker"));
-    await sendKeySequence(sequence, client);
+    await sendKeySequence(sequence, client, target);
     if (isOpen) workspacePickerOpenClients.delete(key);
     else workspacePickerOpenClients.add(key);
     return true;
@@ -760,7 +811,7 @@ function paneCommandArgs(command, paneId, direction) {
   return ["pane", "focus", "--pane", paneId, "--direction", direction];
 }
 
-async function cyclePane(command, state) {
+async function cyclePane(command, state, targetScope) {
   const target = paneCycleTarget(state, command);
   if (!target || target.pane_id === state.focused_pane_id) return;
   const panes = state.layouts.find(item => item.tab_id === state.focused_tab_id).panes;
@@ -770,7 +821,7 @@ async function cyclePane(command, state) {
     let firstError;
     for (const direction of paneRouteDirections(current, target)) {
       try {
-        await run(herdrExecutable(), paneCommandArgs(command, current.pane_id, direction));
+        await runLocal(targetScope, paneCommandArgs(command, current.pane_id, direction));
         firstError = null;
         break;
       } catch (error) {
@@ -778,67 +829,70 @@ async function cyclePane(command, state) {
       }
     }
     if (firstError) throw firstError;
-    state = await snapshot();
+    state = await snapshot(targetScope, true);
     if (state.focused_pane_id === target.pane_id) return;
   }
   throw new Error(`Could not focus HERDR pane ${target.pane_id}`);
 }
 
-async function executeCommand(command, settings = {}) {
-  if (command === "workspace-picker") return toggleWorkspacePicker();
+async function executeCommand(command, settings = {}, target = targets.capture()) {
+  targets.assertCurrent(target);
+  if (target.machineId !== null) throw targetError("HERDR_REMOTE_UNSUPPORTED", "Remote workspace, tab, pane and UI controls are not supported in this first version.");
+  if (command === "workspace-picker") return toggleWorkspacePicker(target);
   const keySequence = commandKeySequence(command);
-  if (keySequence) return sendKeySequence(keySequence);
+  if (keySequence) return sendKeySequence(keySequence, undefined, target);
   if (command === "detach") {
     const client = await attachedClient();
     if (!client) throw new Error("HERDR client is not attached");
+    targets.assertCurrent(target);
     return detach(client);
   }
 
   if (command === "pane-primary") {
-    const state = await snapshot();
+    const state = await snapshot(target, true);
     const resolved = panePrimaryCommand(state, settings);
     if (!resolved) throw new Error("No focused HERDR pane");
-    return run(herdrExecutable(), paneCommandArgs(resolved, state.focused_pane_id));
+    return runLocal(target, paneCommandArgs(resolved, state.focused_pane_id));
   }
   if (["split-right", "split-down", "resize-left", "resize-right", "resize-up", "resize-down", "zoom"].includes(command)) {
-    const state = await snapshot();
-    return run(herdrExecutable(), paneCommandArgs(command, state.focused_pane_id));
+    const state = await snapshot(target, true);
+    return runLocal(target, paneCommandArgs(command, state.focused_pane_id));
   }
   if (command === "pane-left" || command === "pane-right") {
-    const state = await snapshot();
-    return cyclePane(command, state);
+    const state = await snapshot(target, true);
+    return cyclePane(command, state, target);
   }
 
-  const state = await snapshot();
+  const state = await snapshot(target, true);
   const pane = state.panes.find(item => item.pane_id === state.focused_pane_id);
 
   if (command === "agent-prev" || command === "agent-next") {
-    return run(herdrExecutable(), agentCommandArgs(state, command));
+    return runLocal(target, agentCommandArgs(state, command));
   }
 
   if (command === "workspace-new") {
     const args = ["workspace", "create", "--focus"];
     if (pane?.cwd) args.push("--cwd", pane.cwd);
-    return run(herdrExecutable(), args);
+    return runLocal(target, args);
   }
   if (command === "workspace-prev" || command === "workspace-next") {
     const workspaces = [...state.workspaces].sort((a, b) => a.number - b.number);
-    const target = adjacent(workspaces, state.focused_workspace_id, "workspace_id", command.endsWith("prev") ? -1 : 1);
-    if (!target) throw new Error("No workspace available");
-    return run(herdrExecutable(), ["workspace", "focus", target.workspace_id]);
+    const workspace = adjacent(workspaces, state.focused_workspace_id, "workspace_id", command.endsWith("prev") ? -1 : 1);
+    if (!workspace) throw new Error("No workspace available");
+    return runLocal(target, ["workspace", "focus", workspace.workspace_id]);
   }
   if (command === "tab-new") {
     const args = ["tab", "create", "--workspace", state.focused_workspace_id, "--focus"];
     if (pane?.cwd) args.push("--cwd", pane.cwd);
-    return run(herdrExecutable(), args);
+    return runLocal(target, args);
   }
   if (command === "tab-prev" || command === "tab-next") {
     const tabs = state.tabs
       .filter(item => item.workspace_id === state.focused_workspace_id)
       .sort((a, b) => a.number - b.number);
-    const target = adjacent(tabs, state.focused_tab_id, "tab_id", command.endsWith("prev") ? -1 : 1);
-    if (!target) throw new Error("No tab available");
-    return run(herdrExecutable(), ["tab", "focus", target.tab_id]);
+    const tab = adjacent(tabs, state.focused_tab_id, "tab_id", command.endsWith("prev") ? -1 : 1);
+    if (!tab) throw new Error("No tab available");
+    return runLocal(target, ["tab", "focus", tab.tab_id]);
   }
 
   throw new Error(`Unknown HERDR command: ${command}`);
@@ -885,6 +939,9 @@ let lastAttachedState = -1;
 let terminalPreference = "auto";
 let socket;
 let liveRefreshPromise;
+let refreshPromise;
+let pollBusy = false;
+let activeMachineLabel = "Local";
 
 function send(message) {
   if (socket?.readyState === WebSocket.OPEN) socket.send(JSON.stringify(message));
@@ -944,6 +1001,7 @@ function showOk(context) {
 
 function errorFeedback(error) {
   const message = `${error?.message ?? ""}\n${error?.stderr ?? ""}`;
+  if (targetFeedback(error)) return { title: targetFeedback(error).title };
   if (error?.code === "HERDR_CUSTOM_KEYBINDING") return { title: "CUSTOM\nKEYS" };
   if (/HERDR executable not found in a supported install location/i.test(message)) {
     return { title: "INSTALL\nHERDR" };
@@ -965,11 +1023,18 @@ function errorFeedback(error) {
 }
 
 function showError(context, error, originalTitle) {
+  if (error?.code === "HERDR_STALE") return;
+  const target = targets.capture();
   send({ event: "logMessage", payload: { message: [error?.stack ?? String(error), error?.stderr].filter(Boolean).join("\n") } });
   const feedback = errorFeedback(error);
   if (feedback) {
     setTitle(context, feedback.title);
-    setTimeout(() => setTitle(context, errorRestoreTitle(contextInfo.get(context), originalTitle)), 3000);
+    setTimeout(() => {
+      if (targets.isCurrent(target) && contextInfo.has(context)) {
+        setTitle(context, errorRestoreTitle(contextInfo.get(context), originalTitle));
+        refreshLiveFeedbacks().catch(() => {});
+      }
+    }, 3000);
     if (feedback.pane) {
       run("/usr/bin/open", [`x-apple.systempreferences:com.apple.preference.security?${feedback.pane}`], 5000).catch(() => {});
     }
@@ -986,7 +1051,7 @@ function switchProfile(device, profile) {
   });
 }
 
-async function syncHerdrProfile(clients) {
+async function syncHerdrProfile(clients, target) {
   const foregroundPid = await frontmostProcessPid();
   let herdrIsForeground = false;
   for (const client of clients) {
@@ -996,6 +1061,7 @@ async function syncHerdrProfile(clients) {
     }
   }
 
+  targets.assertCurrent(target);
   for (const device of knownDevices) {
     const profile = HERDR_PROFILES[deviceTypes.get(device)];
     if (!profile) continue;
@@ -1010,24 +1076,30 @@ async function syncHerdrProfile(clients) {
 }
 
 async function refresh(force = false) {
-  const clients = await attachedClients();
-  const attachedClientKeys = new Set(clients.map(clientKey));
-  for (const terminal of workspacePickerPruneTerminals(terminalPreference, workspacePickerOpenClients)) {
-    for (const client of await clientsForTerminal(terminal)) {
-      attachedClientKeys.add(clientKey(client));
+  if (refreshPromise) return refreshPromise;
+  const target = targets.capture();
+  refreshPromise = (async () => {
+    const clients = await selectedClients(target);
+    targets.assertCurrent(target);
+    if (target.machineId === null) {
+      const attachedClientKeys = new Set(clients.map(clientKey));
+      for (const terminal of workspacePickerPruneTerminals(terminalPreference, workspacePickerOpenClients)) {
+        for (const client of await clientsForTerminal(terminal)) attachedClientKeys.add(clientKey(client));
+      }
+      targets.assertCurrent(target);
+      for (const key of workspacePickerOpenClients) {
+        if (!attachedClientKeys.has(key)) workspacePickerOpenClients.delete(key);
+      }
     }
-  }
-  for (const key of workspacePickerOpenClients) {
-    if (!attachedClientKeys.has(key)) workspacePickerOpenClients.delete(key);
-  }
-  const attachedState = clients.length ? 1 : 0;
-  if (force || attachedState !== lastAttachedState) {
-    lastAttachedState = attachedState;
-    for (const context of toggleContexts) setState(context, attachedState);
-  }
-
-  await syncHerdrProfile(clients);
-  return attachedState;
+    const attachedState = clients.length ? 1 : 0;
+    if (force || attachedState !== lastAttachedState) {
+      lastAttachedState = attachedState;
+      for (const context of toggleContexts) setState(context, attachedState);
+    }
+    await syncHerdrProfile(clients, target);
+    return attachedState;
+  })();
+  try { return await refreshPromise; } finally { refreshPromise = null; }
 }
 
 function encoderFeedback(dial, state, selectedAgentPaneId, settings = {}) {
@@ -1080,17 +1152,28 @@ function encoderFeedback(dial, state, selectedAgentPaneId, settings = {}) {
   };
 }
 
-async function refreshEncoderFeedbacks(state) {
+async function refreshEncoderFeedbacks(state, target = targets.capture(), error) {
   const encoders = [...contextInfo.entries()].filter(([, info]) => info.action === ENCODER_UUID);
   if (!encoders.length) return;
   for (const [context, info] of encoders) {
-    const selected = info.settings.dial === "client" ? selectAgent(state, agentSelections.get(context)) : null;
-    if (selected) agentSelections.set(context, selected.pane_id);
-    setFeedback(context, encoderFeedback(info.settings.dial, state, selected?.pane_id, info.settings));
+    const key = scopedKey(target, context);
+    const selected = info.settings.dial === "client" ? selectAgent(state, agentSelections.get(key)) : null;
+    if (selected) agentSelections.set(key, selected.pane_id);
+    const feedback = encoderFeedback(info.settings.dial, state, selected?.pane_id, info.settings);
+    if (target.machineId !== null && info.settings.dial !== "client") {
+      feedback.value = "LOCAL ONLY";
+      feedback.hint = "REMOTE AGENTS ONLY";
+    } else if (error) {
+      feedback.value = targetFeedback(error)?.title.replace(/\n/g, " ") ?? "HERDR UNAVAILABLE";
+      feedback.hint = "CHECK SELECTED MACHINE";
+    }
+    if (target.machineId !== null) feedback.label = compactKeyLabel(activeMachineLabel, "REMOTE", 18).toUpperCase();
+    setFeedback(context, feedback);
   }
 }
 
 function refreshAdaptivePaneKeys(state) {
+  if (targets.isRemote()) return;
   if (!state) return;
   const contexts = [...contextInfo.entries()].filter(([, info]) => (
     info.action === COMMAND_UUID && commandForSettings(info.settings) === "pane-primary"
@@ -1111,71 +1194,100 @@ function setAgentPresentation(context, presentation) {
   setImage(context, presentation.image);
 }
 
-function refreshAgentKeys(state) {
+function refreshAgentKeys(state, target = targets.capture(), error) {
   const contexts = [...contextInfo.entries()].filter(([, info]) => info.action === AGENT_UUID);
   for (const [context, info] of contexts) {
     const settings = agentActionSettings(info.settings);
+    const decorate = presentation => ({ ...presentation, title: presentation.title && target.machineId !== null
+      ? `${compactKeyLabel(activeMachineLabel, "REMOTE", 10).toUpperCase()}\n${presentation.title}` : presentation.title });
+    if (error) {
+      setAgentPresentation(context, decorate({ title: targetFeedback(error)?.title ?? "HERDR\nUNAVAILABLE", image: "images/agents-empty.svg" }));
+      continue;
+    }
     if (settings.role === "attention") {
-      setAgentPresentation(context, agentKeyPresentation(state, settings));
+      setAgentPresentation(context, decorate(agentKeyPresentation(state, settings)));
       continue;
     }
     const agentCount = state?.agents?.length ?? 0;
-    const page = normalizeAgentPage(agentPages.get(info.device), agentCount, settings.pageSize);
-    agentPages.set(info.device, page);
-    setAgentPresentation(context, agentKeyPresentation(state, settings, page));
+    const page = normalizeAgentPage(agentPages.get(scopedKey(target, info.device)), agentCount, settings.pageSize);
+    agentPages.set(scopedKey(target, info.device), page);
+    setAgentPresentation(context, decorate(agentKeyPresentation(state, settings, page)));
+  }
+}
+
+function renderTargetControls() {
+  const remote = targets.isRemote();
+  for (const [context, info] of contextInfo) {
+    if (info.action === COMMAND_UUID) setCommandPresentation(context, remote
+      ? { title: "LOCAL\nONLY", image: COMMAND_IMAGES[commandForSettings(info.settings)] }
+      : commandPresentation(info.settings));
+    if (info.action === TOGGLE_UUID) setTitle(context, remote ? `${compactKeyLabel(activeMachineLabel, "REMOTE", 10).toUpperCase()}\nHERDR` : undefined);
   }
 }
 
 async function refreshLiveFeedbacks() {
-  if (liveRefreshPromise) return liveRefreshPromise;
-  liveRefreshPromise = (async () => {
+  const target = targets.capture();
+  if (liveRefreshPromise?.generation === target.generation) return liveRefreshPromise.promise;
+  const promise = (async () => {
     const hasLiveControls = [...contextInfo.values()].some(info => (
-      info.action === ENCODER_UUID
-      || info.action === AGENT_UUID
+      info.action === ENCODER_UUID || info.action === AGENT_UUID
       || (info.action === COMMAND_UUID && commandForSettings(info.settings) === "pane-primary")
     ));
     if (!hasLiveControls) return;
     let state;
+    let failure;
+    let label;
     try {
-      state = await snapshot();
-    } catch {}
+      state = await snapshot(target);
+      if (target.machineId !== null) label = (await targets.resolveMachine(target)).label || target.machineId;
+    } catch (error) { failure = error; }
+    if (!targets.isCurrent(target)) return;
+    if (label) activeMachineLabel = label;
+    renderTargetControls();
     refreshAdaptivePaneKeys(state);
-    await refreshEncoderFeedbacks(state);
-    refreshAgentKeys(state);
+    await refreshEncoderFeedbacks(state, target, failure);
+    if (!targets.isCurrent(target)) return;
+    refreshAgentKeys(state, target, failure);
   })();
-  try {
-    return await liveRefreshPromise;
-  } finally {
-    liveRefreshPromise = null;
+  liveRefreshPromise = { generation: target.generation, promise };
+  try { return await promise; } finally {
+    if (liveRefreshPromise?.promise === promise) liveRefreshPromise = null;
   }
 }
 
 async function toggle(context) {
   if (busy) return;
   busy = true;
+  const target = targets.capture();
   try {
-    const client = await attachedClient();
-    if (client) {
-      await focusClient(client);
+    if (target.machineId !== null) {
+      await snapshot(target); // Probe compatibility/reachability before opening a remote terminal.
+      const machine = await targets.resolveMachine(target, true);
+      await remoteTerminals.open({ machine, terminalPreference, isCurrent: () => targets.isCurrent(target) });
     } else {
-      await attach();
+      const client = await attachedClient();
+      targets.assertCurrent(target);
+      if (client) await focusClient(client);
+      else await attach(target);
     }
-    setTimeout(() => refresh(true).catch(error => showError(context, error)), 750);
+    setTimeout(() => {
+      if (targets.isCurrent(target)) refresh(true).catch(error => showError(context, error));
+    }, 750);
   } catch (error) {
-    showError(context, error);
-  } finally {
-    busy = false;
-  }
+    if (targets.isCurrent(target)) showError(context, error);
+  } finally { busy = false; }
 }
 
 async function runCommand(context, command, acknowledge = true, settings = contextInfo.get(context)?.settings ?? {}) {
   if (!command) return showAlert(context);
+  const target = targets.capture();
   try {
-    const result = await executeCommand(command, settings);
+    const result = await executeCommand(command, settings, target);
+    targets.assertCurrent(target);
     if (acknowledge && result !== false) showOk(context);
     await refreshLiveFeedbacks();
   } catch (error) {
-    showError(context, error, COMMAND_TITLES[command] ?? "HERDR");
+    if (targets.isCurrent(target)) showError(context, error, COMMAND_TITLES[command] ?? "HERDR");
   }
 }
 
@@ -1193,47 +1305,60 @@ async function runCommandKey(context, rawSettings) {
 }
 
 async function returnToPreviousProfile(context) {
+  const target = targets.capture();
   try {
-    const client = await attachedClient();
-    if (!client) return showAlert(context);
+    const client = (await selectedClients(target))[0];
+    if (!client) {
+      // Leaving the profile is safe even when a remote machine or window disappeared.
+      const device = contextInfo.get(context)?.device;
+      if (device) { switchProfile(device); herdrProfileDevices.delete(device); }
+      return;
+    }
+    targets.assertCurrent(target);
     await hideClient(client);
-  } catch {
-    showAlert(context);
+  } catch (error) {
+    if (!targets.isCurrent(target)) return;
+    if (target.machineId !== null) {
+      const device = contextInfo.get(context)?.device;
+      if (device) { switchProfile(device); herdrProfileDevices.delete(device); }
+    } else showError(context, error, "BACK");
   }
 }
 
-async function runAgentKey(context, rawSettings) {
+async function runAgentKey(context, rawSettings, target = targets.capture()) {
   const info = contextInfo.get(context);
   const settings = agentActionSettings(rawSettings ?? info?.settings);
-  let state;
+  const selectionKey = scopedKey(target, context);
+  const pageKey = scopedKey(target, info?.device);
   try {
-    state = await snapshot();
+    targets.assertCurrent(target);
+    const state = await snapshot(target, true);
+    targets.assertCurrent(target);
     if (settings.role === "attention") {
-      const agent = selectAttentionAgent(state, agentSelections.get(context));
+      const agent = selectAttentionAgent(state, agentSelections.get(selectionKey));
       if (!agent) return;
-      agentSelections.set(context, agent.pane_id);
-      await run(herdrExecutable(), ["agent", "focus", agent.pane_id]);
+      await focusAgent(state, agent.pane_id, target);
+      targets.assertCurrent(target);
+      agentSelections.set(selectionKey, agent.pane_id);
       showOk(context);
       await refreshLiveFeedbacks();
       return;
     }
     const agentCount = state?.agents?.length ?? 0;
-    const page = normalizeAgentPage(agentPages.get(info?.device), agentCount, settings.pageSize);
+    const page = normalizeAgentPage(agentPages.get(pageKey), agentCount, settings.pageSize);
     if (settings.role === "prev" || settings.role === "page" || settings.role === "next") {
-      agentPages.set(
-        info?.device,
-        shiftAgentPage(page, settings.role === "prev" ? -1 : 1, agentCount, settings.pageSize)
-      );
-      refreshAgentKeys(state);
+      agentPages.set(pageKey, shiftAgentPage(page, settings.role === "prev" ? -1 : 1, agentCount, settings.pageSize));
+      refreshAgentKeys(state, target);
       return;
     }
     const agent = agentForSlot(state, page, settings.pageSize, settings.slot);
     if (!agent) return showAlert(context);
-    await run(herdrExecutable(), ["agent", "focus", agent.pane_id]);
+    await focusAgent(state, agent.pane_id, target);
+    targets.assertCurrent(target);
     showOk(context);
     await refreshLiveFeedbacks();
   } catch (error) {
-    showError(context, error, info?.agentTitle ?? "AGENT");
+    if (targets.isCurrent(target)) showError(context, error, info?.agentTitle ?? "AGENT");
   }
 }
 
@@ -1249,23 +1374,26 @@ function enqueueAgentAttention(context, task) {
 }
 
 async function runEncoder(context, dial, event, payload) {
+  const target = targets.capture();
+  const selectionKey = scopedKey(target, context);
   if (encoderBusy.has(context)) return;
   if (dial === "client" && (event === "dialRotate" || event === "dialUp")) {
     encoderBusy.add(context);
     try {
-      const state = await snapshot();
+      const state = await snapshot(target, true);
+      targets.assertCurrent(target);
       const delta = event === "dialRotate" ? Math.sign(payload.ticks) : 0;
-      const selected = selectAgent(state, agentSelections.get(context), delta);
+      const selected = selectAgent(state, agentSelections.get(selectionKey), delta);
       if (!selected) return showAlert(context);
-      agentSelections.set(context, selected.pane_id);
+      agentSelections.set(selectionKey, selected.pane_id);
       if (event === "dialUp") {
-        await run(herdrExecutable(), ["agent", "focus", selected.pane_id]);
+        await focusAgent(state, selected.pane_id, target);
         await refreshLiveFeedbacks();
       } else {
-        setFeedback(context, encoderFeedback("client", state, selected.pane_id));
+        await refreshEncoderFeedbacks(state, target);
       }
-    } catch {
-      showAlert(context);
+    } catch (error) {
+      if (targets.isCurrent(target)) showError(context, error);
     } finally {
       encoderBusy.delete(context);
     }
@@ -1288,7 +1416,14 @@ function connectPlugin() {
   socket.addEventListener("open", () => {
     send({ event: registerEvent, uuid: pluginUUID });
     send({ event: "getGlobalSettings", context: pluginUUID });
-    setInterval(() => refresh().then(() => refreshLiveFeedbacks()).catch(() => {}), 1000);
+    setInterval(async () => {
+      if (pollBusy) return;
+      pollBusy = true;
+      try {
+        await refresh().catch(() => {});
+        await refreshLiveFeedbacks();
+      } finally { pollBusy = false; }
+    }, 1000);
   });
 
   socket.addEventListener("message", event => {
@@ -1300,8 +1435,30 @@ function connectPlugin() {
     }
 
     if (message.event === "didReceiveGlobalSettings") {
-      terminalPreference = normalizeTerminal(message.payload?.settings?.terminal);
+      const settings = message.payload?.settings;
+      terminalPreference = normalizeTerminal(settings?.terminal);
+      const changed = targets.select(settings && typeof settings === "object" && !Array.isArray(settings) ? settings.machineId : {});
+      if (changed) {
+        activeMachineLabel = targets.isRemote() ? "REMOTE" : "Local";
+        agentSelections.clear();
+        agentPages.clear();
+        lastAttachedState = -1;
+        renderTargetControls();
+        const target = targets.capture();
+        const loading = targetError("HERDR_UNAVAILABLE", "Loading selected target");
+        refreshAgentKeys(undefined, target, loading);
+        refreshEncoderFeedbacks(undefined, target, loading);
+      }
       refresh(true).catch(() => {});
+      refreshLiveFeedbacks().catch(() => {});
+      return;
+    }
+    if (message.event === "sendToPlugin" && message.payload?.event === "listMachines") {
+      const requestId = message.payload.requestId;
+      targets.listMachines(true).then(machines => send({ event: "sendToPropertyInspector", action: message.action,
+        context: message.context, payload: { event: "machines", requestId, machines: machines.map(({ id, label, enabled }) => ({ id, label, enabled })) }
+      }), error => send({ event: "sendToPropertyInspector", action: message.action, context: message.context,
+        payload: { event: "machines", requestId, error: targetFeedback(error)?.detail ?? error.message } }));
       return;
     }
     if (message.event === "deviceDidConnect") {
@@ -1319,7 +1476,7 @@ function connectPlugin() {
       knownDevices.delete(message.device);
       deviceTypes.delete(message.device);
       herdrProfileDevices.delete(message.device);
-      agentPages.delete(message.device);
+      agentPages.clear();
       return;
     }
 
@@ -1346,15 +1503,17 @@ function connectPlugin() {
       } else if (message.action === AGENT_UUID) {
         refreshLiveFeedbacks().catch(() => showAlert(message.context));
       }
-      refresh(true).catch(() => showAlert(message.context));
+      renderTargetControls();
+      refresh(true).catch(() => {});
     } else if (message.event === "willDisappear") {
       contextInfo.delete(message.context);
       toggleContexts.delete(message.context);
-      agentSelections.delete(message.context);
+      agentSelections.delete(scopedKey(targets.capture(), message.context));
     } else if (message.event === "didReceiveSettings" && message.action === COMMAND_UUID) {
       if (syncCommand(message.context, message.payload?.settings ?? {}, true) === "pane-primary") {
         refreshLiveFeedbacks().catch(() => showAlert(message.context));
       }
+      renderTargetControls();
     } else if (message.event === "didReceiveSettings" && message.action === ENCODER_UUID) {
       const info = contextInfo.get(message.context);
       if (info) info.settings = message.payload?.settings ?? {};
@@ -1368,7 +1527,8 @@ function connectPlugin() {
       else if (message.action === AGENT_UUID) {
         const settings = message.payload?.settings ?? contextInfo.get(message.context)?.settings;
         if (agentActionSettings(settings).role === "attention") {
-          enqueueAgentAttention(message.context, () => runAgentKey(message.context, settings));
+          const target = targets.capture();
+          enqueueAgentAttention(message.context, () => runAgentKey(message.context, settings, target));
         } else {
           runAgentKey(message.context, settings);
         }
@@ -1380,5 +1540,5 @@ function connectPlugin() {
   });
 }
 
-module.exports = { agentAttentionPresentation, agentAttentionSummary, agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, enqueueAgentAttention, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, selectAttentionAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence };
+module.exports = { isLocalHerdrCommand, agentAttentionPresentation, agentAttentionSummary, agentCommandArgs, agentForSlot, agentKeyPresentation, agentKeyTitle, agentPageCount, agentStatusColor, clientKey, commandForSettings, commandPresentation, commandSettings, encoderCommand, encoderFeedback, enqueueAgentAttention, errorFeedback, errorRestoreTitle, herdrExecutable, normalizeAgentPage, normalizeSplitDirection, normalizeTerminal, paneCommandArgs, paneCycleTarget, panePrimaryCommand, paneRouteDirections, selectAgent, selectAttentionAgent, shiftAgentPage, terminalForLaunch, terminalIds, workspacePickerPruneTerminals, workspacePickerSequence };
 if (require.main === module) connectPlugin();
