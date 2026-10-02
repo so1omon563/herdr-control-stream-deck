@@ -19,7 +19,8 @@ or [view all releases](https://github.com/so1omon563/herdr-control-stream-deck/r
   active.
 - Navigates and creates workspaces and tabs.
 - Navigates, splits, resizes, and zooms panes, including mixed layouts.
-- Browses live agents and focuses the selected agent's pane.
+- Browses live agents and focuses the selected agent's pane, locally or on a
+  selected saved Herdr machine (first-version remote support in this source).
 - Opens Spaces, Settings, Sidebar, Rename, and Close interactions.
 - Supports common custom Herdr prefixes and bindings for UI-only actions.
 - Adds configurable Herdr Command actions to custom Stream Deck profiles.
@@ -28,15 +29,19 @@ or [view all releases](https://github.com/so1omon563/herdr-control-stream-deck/r
 
 - macOS 13 or later on Apple silicon.
 - Stream Deck 6.6 or later.
-- Herdr 0.8.2 installed in a [supported location](#supported-locations).
+- Herdr installed in a [supported location](#supported-locations). The existing
+  Local path retains Herdr 0.8.2 compatibility; remote control requires Herdr
+  0.9.1 or later locally and a compatible remote Herdr server.
 - A compatible Node.js runtime available from Homebrew, `/usr/local`, `PATH`,
   or Stream Deck.
 - A 15-key Stream Deck or Stream Deck+.
 - Ghostty, kitty, iTerm2, or Terminal.app.
 
 Only the exact versions in the [support matrix](docs/SUPPORT.md) are covered by
-current test evidence. Intel Macs, other Stream Deck models, and other Herdr
-versions are not currently claimed.
+current test evidence. The remote implementation has source and automated-test
+coverage, but no physical macOS, two-machine remote, or Stream Deck validation
+yet. Intel Macs and other Stream Deck models are not currently claimed. Remote
+features described here do not represent a new published release.
 
 ## Install from GitHub
 
@@ -99,6 +104,11 @@ Automation permission the first time they are used. See
 
 ## Everyday controls
 
+The full controls below apply to **Local**. With a saved remote machine
+selected, only agent status, browsing, focus, Open Herdr, and Back are supported;
+other action controls display `LOCAL ONLY`. See
+[remote agent control](#remote-agent-control).
+
 ### 15-key Stream Deck
 
 | Row | Key 1 | Key 2 | Key 3 | Key 4 | Key 5 |
@@ -142,6 +152,74 @@ one pane. With multiple panes, it changes to Zoom and toggles pane zoom.
   the configurable Herdr Command action.
 
 ## Configuration
+
+### Target machine
+
+The Property Inspector's **Target machine** dropdown is shared by all Herdr
+controls and both bundled profiles. Choose **Local** for this Mac, or an
+enabled saved machine returned by `herdr machine list --json`. Use **Refresh
+machines** after changing profiles in Herdr. Manage machines, SSH targets, and
+session names in Herdr itself; the plugin saves the machine's stable ID rather
+than its label, host name, or list position.
+
+Changing the target changes every Herdr control. Agent selections, attention
+history, and folder pages are scoped to the selected target so identical pane
+IDs on different machines cannot redirect a stale selection. A disabled,
+deleted, or unavailable saved machine remains selected until you explicitly
+choose another target. Errors never silently fall back to Local.
+
+### Remote agent control
+
+This first remote version supports:
+
+- Agent status and the Agent attention key.
+- The Agents folder, its pagination, and the Stream Deck+ Agents dial.
+- Focusing a selected agent on the saved machine and session.
+- **Open Herdr**, which opens or focuses a dedicated local terminal client for
+  that remote session, and **Back**, which returns to the previous Stream Deck
+  profile and hides only that dedicated client when it can identify it safely.
+
+Remote workspace, tab, and pane navigation or creation, splitting, resizing,
+zoom, Spaces, Rename, Settings, Sidebar, Close, and Detach are unavailable and
+display `LOCAL ONLY`. They do not send local commands while a remote is selected.
+
+Before using remote controls, prepare the saved machine in Herdr and confirm
+its SSH connection and saved session work there. Local Herdr must be 0.9.1 or
+later, and the remote must run a compatible Herdr server. The CLI contract was
+checked against Herdr 0.9.3 source; this is not a remote hardware-support claim.
+Herdr Control reuses Herdr's saved profiles and OpenSSH, and adds no credential
+store, background service, SSH setup flow, or installer/upgrader. A remote may
+need separate preparation or an upgrade; automatic installation or upgrading
+is not promised.
+
+Herdr's machine-targeted status/focus forwarding does not install, start, or
+restart a remote server. Its native remote TUI attach behaves differently: it
+may start a missing server or ask you to install a compatible binary or replace
+an incompatible running server. Herdr Control never approves those prompts.
+In Herdr 0.9.3, the install prompt defaults to Yes on Enter; server replacement
+defaults to No and can stop existing remote pane processes if approved. Review
+these prompts yourself and cancel if you do not want the change.
+
+The dedicated client uses
+`herdr --remote <saved-target> --session <saved-session>` in the selected local
+terminal. Agent focus uses `herdr --machine <saved-id> agent focus <pane-id>`.
+Herdr broadcasts that focus to
+attached clients of the same remote session. It cannot switch an already-open
+combined Local/remote TUI to another endpoint, which is why the plugin opens a
+dedicated client instead. Other clients attached to that same remote session
+may change focus too. Back does not close remote agents or terminate their
+session.
+
+Only clients created and positively identified during the current plugin run
+are reused. After a plugin restart, or when terminal identity is ambiguous,
+Open creates a fresh dedicated window and Back leaves unrecognized windows
+alone. The plugin does not answer SSH authentication prompts for you.
+
+Remote status failures are distinct from a successfully connected session with
+no agents. During an outage, status polling backs off rather than reporting an
+empty agent list. See [troubleshooting](#troubleshooting), the
+[support matrix](docs/SUPPORT.md), and the
+[remote manual-test checklist](docs/REMOTE-TESTING.md).
 
 ### Terminal selection
 
@@ -220,6 +298,13 @@ also uses temporary key titles for known prerequisites:
 | `ALLOW ACCESS` | Enable Elgato Stream Deck in macOS Accessibility. |
 | `ALLOW AUTOMATION` | Enable System Events under Elgato Stream Deck in macOS Automation. |
 | `CUSTOM KEYS` | Correct the Herdr TOML file or use a binding from the supported subset. |
+| `AUTH REQUIRED` | Check the selected machine's OpenSSH authentication and host-key verification in your terminal. |
+| `VERSION MISMATCH` | Check that local Herdr is 0.9.1 or later and that the remote server and response schema are compatible. Prepare or upgrade Herdr separately if needed. |
+| `CHECK MACHINE` | Enable the saved machine in Herdr, or explicitly select Local or another enabled machine. |
+| `REMOTE OFFLINE` | Check the selected remote's network, SSH reachability, and Herdr availability. |
+| `HERDR UNAVAILABLE` | Herdr could not read the selected session; inspect the plugin logs and try the same target in Herdr. |
+| `LOCAL ONLY` | This control is unavailable for remote targets. Select Local to use it. |
+| `TARGET CHANGED` | The target changed during the request. Refresh or press again on the intended target. |
 
 If the profiles are missing, follow
 [the manual profile import steps](#if-the-bundled-profiles-do-not-appear).
@@ -250,6 +335,9 @@ Supported terminal application locations are:
 
 ## Known limitations
 
+- The first remote version has no physical macOS, two-machine remote, or
+  Stream Deck test evidence yet. Its terminal paths are mock-tested; the
+  [manual matrix](docs/REMOTE-TESTING.md) remains to be run.
 - Herdr 0.8.2 does not expose client navigation mode. Spaces tracks picker
   opens and closes initiated through Herdr Control. Dismissing the picker from
   Herdr's keyboard can leave the toggle out of sync until the Stream Deck

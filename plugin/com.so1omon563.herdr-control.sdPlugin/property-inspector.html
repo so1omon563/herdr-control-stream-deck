@@ -14,12 +14,25 @@
     button { padding: 0; color: #9ddcff; background: none; border: 0; font: inherit; text-decoration: underline; cursor: pointer; }
     .help { margin-top: 16px; }
     section[hidden] { display: none; }
+    section + section { margin-top: 18px; }
+    select:disabled, button:disabled { opacity: .6; cursor: default; }
+    #machine-label { color: #ddd; overflow-wrap: anywhere; }
   </style>
 </head>
 <body>
+  <section id="machine-settings">
+    <label for="machine">Target machine</label>
+    <select id="machine" disabled aria-describedby="machine-label machine-status machine-help">
+      <option value="local">Local</option>
+    </select>
+    <p id="machine-label">Local</p>
+    <p id="machine-status" role="status" aria-live="polite">Loading shared settings…</p>
+    <p><button id="refresh-machines" type="button" disabled>Refresh machines</button></p>
+    <p id="machine-help">This target is shared by all Herdr controls. Saved machines are managed in Herdr. The first remote version supports agents and Open/Back only; workspace, tab, pane, and UI controls are unavailable remotely.</p>
+  </section>
   <section id="terminal-settings" hidden>
     <label for="terminal">Terminal</label>
-    <select id="terminal">
+    <select id="terminal" disabled>
       <option value="auto">Auto</option>
       <option value="ghostty">Ghostty</option>
       <option value="kitty">kitty</option>
@@ -30,7 +43,7 @@
   </section>
   <section id="command-settings" hidden>
     <label for="command">Command</label>
-    <select id="command">
+    <select id="command" disabled>
       <optgroup label="Workspaces">
         <option value="workspace-next">Next Workspace</option>
         <option value="workspace-prev">Previous Workspace</option>
@@ -74,7 +87,7 @@
   </section>
   <section id="pane-settings" hidden>
     <label for="split-direction">When the tab has one pane</label>
-    <select id="split-direction">
+    <select id="split-direction" disabled>
       <option value="right">Side by side (Split Right)</option>
       <option value="down">Stacked (Split Down)</option>
     </select>
@@ -84,10 +97,26 @@
   <script>
     const COMMAND_UUID = "com.so1omon563.herdr-control.command";
     const ENCODER_UUID = "com.so1omon563.herdr-control.encoder";
+    const LOCAL_VALUE = "local";
+    const INVALID_VALUE = "invalid-target";
+    const machineValue = id => `machine:${id}`;
+    const isRecord = value => value !== null && typeof value === "object" && !Array.isArray(value);
     let socket;
     let context;
     let action;
     let settings = {};
+    let globalSettings = null;
+    let globalsReady = false;
+    let globalSettingsError = "";
+    let machines = [];
+    let machineListState = "loading";
+    let machineListError = "";
+    let nextRequestId = 0;
+    let pendingRequestId = null;
+    const machine = document.getElementById("machine");
+    const machineLabel = document.getElementById("machine-label");
+    const machineStatus = document.getElementById("machine-status");
+    const refreshMachines = document.getElementById("refresh-machines");
     const terminal = document.getElementById("terminal");
     const command = document.getElementById("command");
     const splitDirection = document.getElementById("split-direction");
@@ -96,14 +125,101 @@
     const paneSettings = document.getElementById("pane-settings");
     const help = document.getElementById("help");
 
+    const connected = () => socket?.readyState === WebSocket.OPEN;
+    const send = message => {
+      if (connected()) socket.send(JSON.stringify(message));
+    };
+    const updateControls = () => {
+      for (const control of [machine, terminal, command, splitDirection]) {
+        control.disabled = !connected() || !globalsReady;
+      }
+      refreshMachines.disabled = !connected();
+    };
+    const setGlobalSettings = patch => {
+      if (!globalsReady || !connected()) return;
+      globalSettings = { ...globalSettings, ...patch };
+      send({ event: "setGlobalSettings", context, payload: globalSettings });
+    };
     const setActionSettings = patch => {
+      if (!globalsReady || !connected()) return;
       settings = { ...settings, ...patch };
-      socket?.send(JSON.stringify({
-        event: "setSettings",
-        action,
-        context,
-        payload: settings
-      }));
+      send({ event: "setSettings", action, context, payload: settings });
+    };
+    const addMachineOption = (value, label, disabled = false) => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      option.disabled = disabled;
+      machine.append(option);
+    };
+    const renderMachines = () => {
+      // Only missing/null IDs mean Local. Invalid or deleted IDs must never fall back.
+      const target = globalSettings?.machineId;
+      const local = target === undefined || target === null;
+      const validId = typeof target === "string" && target.trim().length > 0;
+      const selected = validId ? machines.find(item => item.id === target) : undefined;
+      machine.replaceChildren();
+      addMachineOption(LOCAL_VALUE, "Local");
+      for (const item of machines) {
+        const unavailable = !item.enabled;
+        const suffix = unavailable ? " (disabled; unavailable)"
+          : machineListState === "ready" ? "" : " (availability unknown)";
+        addMachineOption(machineValue(item.id), `${item.label}${suffix}`,
+          unavailable || machineListState !== "ready");
+      }
+      if (!local && !selected) {
+        addMachineOption(validId ? machineValue(target) : INVALID_VALUE,
+          validId ? `Saved machine (${target}) — unavailable` : "Saved target (invalid ID; unavailable)", true);
+      }
+      machine.value = local ? LOCAL_VALUE : validId ? machineValue(target) : INVALID_VALUE;
+      machineLabel.textContent = local ? "Local" : selected ? selected.label
+        : validId ? `Saved machine: ${target}` : "Saved target: invalid machine ID";
+      if (!connected()) {
+        machineStatus.textContent = "Disconnected. Reopen settings to reconnect.";
+      } else if (!globalsReady) {
+        machineStatus.textContent = globalSettingsError || "Loading shared settings…";
+      } else if (!local && !validId) {
+        machineStatus.textContent = "The saved target ID is invalid and unavailable. Select Local or an enabled saved machine explicitly to change it.";
+      } else if (machineListState === "loading") {
+        machineStatus.textContent = local ? "Local selected. Loading saved machines…"
+          : "Checking the saved target. It will stay selected until you change it.";
+      } else if (machineListState === "error") {
+        machineStatus.textContent = `Unable to refresh saved machines. ${machineListError} ${local ? "Local remains selected." : "The saved target remains selected; availability is unknown."}`;
+      } else if (!local && (!selected || !selected.enabled)) {
+        machineStatus.textContent = "This saved target is unavailable. Enable it in Herdr, or explicitly select Local or another enabled machine.";
+      } else {
+        machineStatus.textContent = local ? "Controls run on this Mac." : "Saved remote target enabled. Agents and Open/Back are supported.";
+      }
+      updateControls();
+    };
+    const requestMachines = () => {
+      if (!connected()) return;
+      pendingRequestId = ++nextRequestId;
+      machineListState = "loading";
+      machineListError = "";
+      renderMachines();
+      send({ event: "sendToPlugin", action, context,
+        payload: { event: "listMachines", requestId: pendingRequestId } });
+    };
+    const receiveMachines = payload => {
+      if (!isRecord(payload) || payload.event !== "machines" || pendingRequestId === null
+          || payload.requestId !== pendingRequestId) return;
+      pendingRequestId = null;
+      const malformed = !Array.isArray(payload.machines);
+      if (!malformed) {
+        const seen = new Set();
+        machines = payload.machines.filter(item => {
+          if (!isRecord(item) || typeof item.id !== "string" || !item.id.trim()
+              || typeof item.label !== "string" || typeof item.enabled !== "boolean"
+              || seen.has(item.id)) return false;
+          seen.add(item.id);
+          return true;
+        });
+      }
+      machineListError = typeof payload.error === "string" ? payload.error : "";
+      machineListState = malformed || machineListError ? "error" : "ready";
+      if (malformed && !machineListError) machineListError = "The machine list was invalid.";
+      renderMachines();
     };
 
     const renderSettings = () => {
@@ -123,51 +239,76 @@
     };
 
     terminal.addEventListener("change", () => {
-      socket?.send(JSON.stringify({
-        event: "setGlobalSettings",
-        context,
-        payload: { terminal: terminal.value }
-      }));
+      setGlobalSettings({ terminal: terminal.value });
     });
-
+    machine.addEventListener("change", () => {
+      if (!globalsReady || !connected()) return;
+      if (machine.value === LOCAL_VALUE) {
+        setGlobalSettings({ machineId: null });
+      } else {
+        const selected = machines.find(item => machineValue(item.id) === machine.value);
+        if (machineListState === "ready" && selected?.enabled) {
+          setGlobalSettings({ machineId: selected.id });
+        }
+      }
+      renderMachines();
+    });
+    refreshMachines.addEventListener("click", requestMachines);
     command.addEventListener("change", () => {
       setActionSettings({ command: command.value });
       renderSettings();
     });
-
     splitDirection.addEventListener("change", () => {
       setActionSettings({ splitDirection: splitDirection.value });
     });
-
     help.addEventListener("click", () => {
-      socket?.send(JSON.stringify({
-        event: "openUrl",
-        payload: { url: "https://github.com/so1omon563/herdr-control-stream-deck#first-use" }
-      }));
+      send({ event: "openUrl",
+        payload: { url: "https://github.com/so1omon563/herdr-control-stream-deck#first-use" } });
     });
 
     window.connectElgatoStreamDeckSocket = (port, uuid, registerEvent, _info, actionInfoJson) => {
       const actionInfo = JSON.parse(actionInfoJson);
       context = uuid;
       action = actionInfo.action;
-      settings = actionInfo.payload?.settings ?? {};
+      settings = isRecord(actionInfo.payload?.settings) ? actionInfo.payload.settings : {};
+      globalsReady = false;
+      globalSettingsError = "";
       renderSettings();
       socket = new WebSocket(`ws://127.0.0.1:${port}`);
+      updateControls();
       socket.addEventListener("open", () => {
-        socket.send(JSON.stringify({ event: registerEvent, uuid }));
-        if (action !== COMMAND_UUID && action !== ENCODER_UUID) {
-          socket.send(JSON.stringify({ event: "getGlobalSettings", context }));
-        }
+        send({ event: registerEvent, uuid });
+        // Every action can change the shared target; load the full snapshot before edits.
+        send({ event: "getGlobalSettings", context });
+        requestMachines();
         document.body.classList.add("ready");
       });
       socket.addEventListener("message", event => {
-        const message = JSON.parse(String(event.data));
+        let message;
+        try { message = JSON.parse(String(event.data)); } catch { return; }
+        if (!isRecord(message)) return;
         if (message.event === "didReceiveGlobalSettings") {
-          terminal.value = message.payload?.settings?.terminal ?? "auto";
+          if (!isRecord(message.payload?.settings)) {
+            globalsReady = false;
+            globalSettingsError = "Shared settings were invalid. Reopen settings before making changes.";
+          } else {
+            globalSettings = message.payload.settings;
+            globalsReady = true;
+            globalSettingsError = "";
+            terminal.value = globalSettings.terminal ?? "auto";
+          }
+          renderMachines();
         } else if (message.event === "didReceiveSettings") {
-          settings = message.payload?.settings ?? {};
+          settings = isRecord(message.payload?.settings) ? message.payload.settings : {};
           renderSettings();
+        } else if (message.event === "sendToPropertyInspector") {
+          receiveMachines(message.payload);
         }
+      });
+      socket.addEventListener("close", () => {
+        globalsReady = false;
+        pendingRequestId = null;
+        renderMachines();
       });
     };
   </script>

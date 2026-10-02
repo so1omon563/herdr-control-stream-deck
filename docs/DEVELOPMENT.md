@@ -4,6 +4,13 @@
 
 - `plugin/com.so1omon563.herdr-control.sdPlugin/`: Stream Deck plugin source and assets.
 - `plugin/com.so1omon563.herdr-control.sdPlugin/keybindings.js`: isolated Herdr config parsing, binding resolution, and macOS key translation.
+- `plugin/com.so1omon563.herdr-control.sdPlugin/targets.js`: saved-machine identity, target-bound snapshots and focus, version checks, error classification, and polling backoff.
+- `plugin/com.so1omon563.herdr-control.sdPlugin/remote-terminal.js`: dedicated local terminal clients for saved remote sessions.
+- `scripts/test-targets.mjs`: target routing, schema, error, and concurrency regression checks.
+- `scripts/test-property-inspector.mjs`: mocked shared-target settings and machine-list UI checks.
+- `scripts/test-remote-terminal.mjs`: mocked remote terminal launch, identity, reuse, and stale-target checks.
+- `scripts/test-runtime-routing.mjs`: mocked plugin-level routing and Local-only execution checks.
+- `docs/REMOTE-TESTING.md`: pending physical remote validation matrix and evidence template.
 - `plugin/com.so1omon563.herdr-control.sdPlugin/vendor/`: packaged runtime parser and third-party license.
 - `profile/`: unpacked 15-key profile source.
 - `profile-plus/`: unpacked Stream Deck+ profile source.
@@ -35,6 +42,84 @@ custom binding parsing and translation, dial feedback, command mappings, and
 the pane-routing regressions found during hardware testing. The Stream Deck
 validation runs the official CLI against the personal plugin UUID without
 updating its validation schemas during the run.
+
+`npm test` includes the remote regression suites. They can also be run directly:
+
+```sh
+node scripts/test-targets.mjs
+node scripts/test-remote-terminal.mjs
+node scripts/test-property-inspector.mjs
+node scripts/test-runtime-routing.mjs
+```
+
+Run these and the full commands above after integration; this documentation is
+not a claim that the current combined changes have passed final validation.
+Mock coverage does not replace the physical
+[remote manual matrix](REMOTE-TESTING.md).
+
+## Remote agent control
+
+Keep the existing Local path compatible with Herdr 0.8.2. Saved-machine remote
+routing requires local Herdr 0.9.1 or later and a compatible remote server; the
+CLI contract was checked against Herdr 0.9.3 source. The plugin reads enabled
+profiles from `herdr machine list --json` and persists a shared stable machine
+ID. It does not manage SSH credentials, profiles, remote services, setup, or
+upgrades. Remote preparation remains a Herdr/OpenSSH prerequisite.
+
+Distinguish Herdr's two remote paths. In 0.9.3, machine-targeted API/control
+forwarding never installs, starts, or restarts the server. Native `--remote`
+TUI attach may start a missing server; if it requires an installation or an
+incompatible-server replacement, Herdr can ask the user interactively. The
+install prompt defaults to Yes on Enter, while server replacement defaults to
+No and can stop existing pane processes if approved. Noninteractive setup
+fails instead. A compatible server can attach without installation/restart.
+Do not infer complete TUI compatibility solely from a successful API snapshot,
+or add automatic prompt answers to the terminal path.
+
+The remote scope is deliberately limited to status/attention, agent-folder and
+dial browsing, agent focus, and dedicated Open/Back. All workspace, tab, pane,
+Spaces, Rename, Settings, Sidebar, Close, and Detach execution paths must fail
+with `LOCAL ONLY` for remote selections before issuing a local command or
+sending a UI keystroke. Folder navigation can still expose supported agents.
+
+Preserve these routing invariants:
+
+- Capture the target and generation at the start of an operation. Discard stale
+  results after a selection change, including a switch away and back to the same
+  ID; never reinterpret them as results for the newly selected target.
+- Bind snapshots and pane selections to their target. Scope attention history,
+  agent-folder pages, and dial selections by target, not by pane ID alone.
+- Serialize snapshots and focus operations, share in-flight reads, and back off
+  repeated status failures. A failed read is not an empty agent list.
+- Revalidate the saved machine before focus, including its target, session, and
+  enabled state. Missing, disabled, changed, or malformed profiles fail closed
+  and preserve the selection; there is no Local fallback.
+- Never automatically retry agent focus after an ambiguous timeout. The remote
+  may already have applied the command.
+- Keep authentication, offline, version/schema, unavailable-session, and
+  target-selection failures distinguishable in feedback.
+
+Remote agent focus invokes `herdr --machine <saved-id> agent focus <pane-id>`.
+Herdr broadcasts focus to attached clients of that remote session. It does not
+switch an existing combined Local/remote TUI's selected endpoint. Open therefore
+creates or safely reuses a dedicated local terminal client with
+`herdr --remote <exact-saved-target> --session <exact-saved-session>`. Labels are
+for display only; do not reconstruct a host, omit a named session, or reuse a
+client based on a substring match. Back must hide only that safely identified
+client, without closing remote work or unrelated local/remote terminals.
+
+Client reuse is limited to launches tracked in the current plugin runtime,
+revalidated with process ID, start time, TTY, and exact remote arguments. A
+restart, ambiguous process arguments, inspection failure, or multiple TTYs in
+a Ghostty/kitty process must not cause broad terminal focus. Open creates a
+fresh dedicated window when safe reuse cannot be established; Back leaves
+unrecognized clients alone. Do not simulate terminal keystrokes or answer
+authentication prompts automatically.
+
+The four terminal paths have mock coverage, not physical macOS validation.
+Record exact versions and outcomes in `SUPPORT.md` only after completing the
+corresponding [manual cases](REMOTE-TESTING.md); preserve the older Local and
+release-installation evidence separately.
 
 ## Marketplace media
 

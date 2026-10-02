@@ -10,12 +10,43 @@ not evidence that every intermediate version has been tested.
 | --- | --- | --- | --- |
 | macOS | 13 or later | 26.5.2 (25F84) and 27.0 public beta (26A5421a), Apple silicon | The manifest declares macOS 13. Intel Macs and macOS 13 through 25 have not been hardware-tested. The agent-folder pass used the macOS 27 public beta. |
 | Stream Deck | 6.6 or later | 7.5.0 (22885) | The manifest declares 6.6. Versions before 7.5.0 have not been exercised during the personal-plugin clean install. |
-| Herdr | 0.8.2 | 0.8.2 | This is the only Herdr version covered by the current CLI, socket-schema, keybinding, and hardware evidence. |
-| Node.js runtime | A compatible runtime must be available from Homebrew, `/usr/local`, `PATH`, or Stream Deck | 20.20.0, 22.22.3, and 24.13.1 | The full validation suite passes on all three exact versions. Development tooling requires Node.js 20.1 or later. |
+| Herdr, Local path | Existing 0.8.2 compatibility retained | 0.8.2 on hardware | Historical CLI, socket-schema, keybinding, and hardware evidence below is for Local control. It does not validate remote control or newer Herdr versions on hardware. |
+| Herdr, first remote version | Local 0.9.1 or later plus a compatible remote Herdr server | CLI contract checked against 0.9.3 source; automated/mock coverage | Remote saved-machine routing and dedicated terminal clients are source-level additions. No physical macOS, two-machine remote-session, or Stream Deck run has been completed for them. A newer source check does not establish compatibility for every later version. |
+| Node.js runtime | A compatible runtime must be available from Homebrew, `/usr/local`, `PATH`, or Stream Deck | 20.20.0, 22.22.3, and 24.13.1 | The pre-remote full validation suite passed on all three exact versions. This historical result does not claim a new three-version run of the remote changes. Development tooling requires Node.js 20.1 or later. |
 | Stream Deck CLI | Development only | 1.9.0 | The repository pins this version for validation and packaging. End users do not run the CLI. |
-| TOML parser | Packaged runtime dependency | smol-toml 1.7.1 | The exact CommonJS parser and BSD 3-Clause license are bundled in the plugin. Repository validation requires the vendored files to match the pinned dependency. |
+| TOML parser | Packaged runtime dependency | smol-toml 1.9.0 in current source | The exact CommonJS parser and BSD 3-Clause license are bundled in the plugin. Repository validation requires the vendored files to match the pinned dependency. This dependency update has automated-only evidence; historical hardware and release tests are not being reattributed to 1.9.0. |
+
+## First-version remote boundary
+
+The shared target dropdown selects Local or an enabled saved Herdr machine by
+stable ID. Remote scope is agent status/attention, agent-folder and dial
+browsing, agent focus, and Open/Back for a dedicated local terminal client.
+Workspace, tab, pane, Spaces, Rename, Settings, Sidebar, Close, and Detach
+controls are Local-only. A missing, disabled, or failed remote never falls
+back to Local; authentication, offline, version/schema, and target-selection
+failures are distinct from a valid empty agent list.
+
+Remote focus uses the saved machine and session and broadcasts to clients
+attached to that remote session. It does not switch the endpoint of an existing
+combined Local/remote TUI. Open uses the exact saved SSH target and session in
+a separate terminal client. Back hides only that safely identified dedicated
+client and leaves remote work running.
+
+The plugin reuses Herdr saved profiles and OpenSSH. It adds no credential
+storage, service, setup flow, or installer/upgrader. The remote host may need
+separate preparation or a compatible Herdr upgrade; automatic installation or
+upgrading is not promised. In Herdr 0.9.3, machine-targeted forwarding never
+installs/starts/restarts the server, whereas native remote TUI attach may start
+a missing server or show interactive installation/replacement prompts. The
+plugin does not approve these; replacing an incompatible server can stop its
+pane processes. See [remote setup](../README.md#remote-agent-control) and the
+[pending manual matrix](REMOTE-TESTING.md).
 
 ## Hardware
+
+All hardware evidence in this section predates remote support and covers the
+Local path. The two-machine release-installation test below is not a
+remote-session test.
 
 | Hardware | Bundled profile | Hardware evidence |
 | --- | --- | --- |
@@ -68,11 +99,19 @@ An installed application version records the available test environment. It
 does not mean every explicit terminal selection was re-tested during this
 support-matrix pass.
 
+All four dedicated remote terminal implementations (Ghostty, kitty, iTerm2,
+and Terminal.app) have mock-test coverage. Their remote launch, exact-client
+reuse, and Back behavior have not been physically tested on macOS. Do not read
+the historical terminal versions above as remote validation.
+
 ## Not Currently Claimed
 
 - Intel Mac support.
 - Windows or Linux support.
-- Herdr versions other than 0.8.2.
+- Physical validation of Herdr versions other than 0.8.2, including the
+  0.9.1+ remote-control boundary.
+- Remote control beyond the documented agent and dedicated Open/Back scope.
+- Physical remote operation on any supported terminal or Stream Deck device.
 - Stream Deck software versions before 7.5.0 as physically tested versions.
 - Stream Deck models other than the tested 15-key device and Stream Deck+.
 - Custom keybinding forms outside the documented safe subset, including Hyper,
